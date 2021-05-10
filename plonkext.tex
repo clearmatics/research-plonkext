@@ -1137,12 +1137,13 @@ polynomially many simulated proofs for any statements it wishes.
 \begin{definition}[Simulation-extractable NIZK, \cite{INDOCRYPT:FKMV12}]
 	\label{def:simext}
 	Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a computationally
-  special-sound HVZK proof and $\ps_\fs = (\kgen_\fs, \prover_\fs,
-  \verifier_\fs, \simulator_\fs)$ be $\ps$ transformed by the Fiat--Shamir
-  transform. We say that $\ps_\fs$ is \emph{simulation-extractable} with
-  \emph{extraction error} $\nu$ if for any $\ppt$ adversary $\adv$ that is given
-  oracle access to a random oracle $\ro$ and simulator $\simulator_\fs$, and
-  produces an accepting transcript of $\ps$ with probability $\accProb$, that is
+  special-sound HVZK proof and
+  $\ps_\fs = (\kgen_\fs, \prover_\fs, \verifier_\fs, \simulator_\fs)$ be $\ps$
+  transformed by the Fiat--Shamir transform. We say that $\ps_\fs$ is
+  \emph{simulation-extractable} with \emph{extraction error} $\nu$ if for any
+  $\ppt$ adversary $\adv$ that is given oracle access to a random oracle $\ro$
+  and simulator $\simulator_\fs$, and produces an accepting transcript of $\ps$
+  with probability $\accProb$, that is
 	\[
 		\accProb = \Pr \left[
 		\begin{aligned}
@@ -1199,8 +1200,33 @@ cf.~\cite{CCS:BelNev06}.
 \changedm{ We propose a new notion of \emph{updatable simulation extractability}
   which assures that the proof system is secure even when an adversary is
   allowed to update the SRS \emph{and} get simulated proofs for the statements
-  it requires. For the ease of exposition we begin with definitions of
-  \emph{updatable soundness} and \emph{updatable zero knowledge}
+  it requires. Before we define the aforementioned notion we recall definitions
+  of \emph{updatable soundness} and \emph{updatable zero knowledge} as proposed
+  by Groth et al.~\cite{C:GKMMM18}.
+
+  Here, differently from ``a standard'' way of generating the SRS of the proof
+  system for $\REL$, there is no single $\kgen$ algorithm which outputs the
+  string. Instead there $\kgen$ compounds of a tuple of algorithms:
+  $\algsetup, \algupdate, \algverifysrs$ such that
+  \begin{description}
+  \item[$\algsetup$] which takes a relation $\REL$ and outputs an SRS
+    $\srs$ and proof that $\srs$ has been computed correctly $\rho$.
+  \item[$\algupdate$] which takes a relation $\REL$, SRS $\srs$ and sequence of
+    proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs a new SRS
+    $\srs'$ and proof $\rho'$.
+  \item[$\algverifysrs$] which takes a relation $\REL$, SRS $\srs$ and sequence of
+    proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs $1$ if the
+    sequence and SRS are accepted, or $0$ if they are not. 
+  \end{description}
+
+
+ Similarly, the simulator is no longer a single algorithm but consists of
+ $\algsimsetup, \algsimupdate, \algsimprove$ such that
+ \begin{description}
+ \item[$\algsimsetup$]
+ \item[$\algsimupdate$]
+ \item[$\algsimprove$]
+ \end{description}
 
   \begin{definition}[Updatable soundness~\cite{C:GKMMM18}]
     Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
@@ -1225,6 +1251,35 @@ cf.~\cite{CCS:BelNev06}.
     \]
   \end{definition}
 
+  \begin{figure}[t]
+  	\centering
+		\fbox{
+		\procedure{$\oraclesrs(\intent, \srs_n, (\rho_i)_{i = 1}^{n})$}		
+		{
+      \pcif \srs \neq \bot \pcthen \pcreturn 0 \\
+      \pcif \intent = \setup \pcthen \\
+      \pcind (\srs', \rho') \sample \algsetup(\REL)\\
+      \pcind Q \gets Q \cup \smallset{\rho'}\\
+      \pcind \pcreturn (\srs', \rho')\\
+      \pcif \intent = \update \pcthen\\
+      \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
+      \pcind \pcif b = 0 \pcthen \pcreturn 0 \\
+      \pcind (\srs', \rho') \sample \algupdate(\REL, \srs_n, (\rho)_{i = 1}^n)
+      \\
+      \pcind Q \gets Q \cup \smallset{\rho'}\\
+      \pcind \pcreturn (\srs', \rho') \\
+      \pcif \intent = \final \\
+      \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
+      \pcind \pcif b = 0 \lor Q \cap \smallset{\rho_i}_i = \emptyset \pcthen \pcreturn
+      0 \\
+      \pcind \srs \gets \srs_n\\
+      \pcind \pcreturn \srs\\
+      \pcelse \pcreturn 0
+    }}
+  \caption{SRS updates oracle}
+  \label{fig:oraclesrs}
+\end{figure}
+  
   \begin{definition}[Updatable zero knowledge~\cite{C:GKMMM18}]
     Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
     $\REL$. We say that $\ps$ is \emph{updatable zero knowledge knowledge} if
@@ -1238,8 +1293,8 @@ cf.~\cite{CCS:BelNev06}.
         \end{aligned}
         \, \left| \,
           \begin{aligned}
-            \kgen \gets \simkgen \\
-            \srsupdate \gets \simsrsupdate\\
+            \kgen \gets \algsimsetup \\
+            \algupdate \gets \algsimupdate\\
             \srs \gets \bot \\
             Q \gets \emptyset
         \end{aligned}
@@ -1286,9 +1341,9 @@ and
 		\end{aligned}
 		\, \left| \,
 		\begin{aligned}
-			& \srs \gets \kgen(\REL), r \sample \RND{\advse}, \\
-			& (\inp_{\advse}, \zkproof_{\advse}) \gets \advse^{\simulator_\fs,
-			\ro, \oraclesrs} (\REL; r) 
+			& r \sample \RND{\advse}, \\
+			& (\inp_{\advse}, \zkproof_{\advse}) \gets \advse^{\simulator_\fs, \ro,
+        \oraclesrs} (\REL; r)
 		\end{aligned}
 		\right.\right]\,,
 	\]
@@ -1302,11 +1357,11 @@ and
 		\end{aligned}
 		\, \left| \,
 		\begin{aligned}
-			& \srs \gets \kgen(\REL), r \sample \RND{\advse},\\
+			& r \sample \RND{\advse},\\
 			& (\inp_{\advse}, \zkproof_{\advse}) \gets \advse^{\simulator_\fs,
-			\ro,\oraclesrs} (\REL; r) \\
-			& \wit_{\advse} \gets \ext_\se (\REL, \srs, \advse, r, \inp_{\advse}, \zkproof_{\advse},
-			Q, Q_\ro,) 
+        \ro,\oraclesrs} (\REL; r) \\
+			& \wit_{\advse} \gets \ext_\se (\REL, \srs, \advse, r, \inp_{\advse},
+      \zkproof_{\advse}, Q, Q_\ro,)
 		\end{aligned}
 		\right.\right]
 	\]
@@ -1321,34 +1376,7 @@ and
   queries to $\ro$ and $\ro$'s answers.
 \end{definition}
 
-\begin{figure}
-  	\centering
-		\fbox{
-		\procedure{$\oraclesrs(\intent, \srs_n, (\rho_i)_{i = 1}^{n})$}		
-		{
-      \pcif \srs \neq \bot \pcthen \pcreturn 0 \\
-      \pcif \intent = \setup \pcthen \\
-      \pcind (\srs', \rho') \sample \kgen(\REL)\\
-      \pcind Q \gets Q \cup \smallset{\rho'}\\
-      \pcind \pcreturn (\srs', \rho')\\
-      \pcif \intent = \update \pcthen\\
-      \pcind b \gets \verifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
-      \pcind \pcif b = 0 \pcthen \pcreturn 0 \\
-      \pcind (\srs', \rho') \sample \srsupdate(\REL, \srs_n, (\rho)_{i = 1}^n)
-      \\
-      \pcind Q \gets Q \cup \smallset{\rho'}\\
-      \pcind \pcreturn (\srs', \rho') \\
-      \pcif \intent = \final \\
-      \pcind b \gets \verifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
-      \pcind \pcif b = 0 \lor Q \cap \smallset{\rho_i}_i = \emptyset \pcthen \pcreturn
-      0 \\
-      \pcind \srs \gets \srs_n\\
-      \pcind \pcreturn \srs\\
-      \pcelse \pcreturn 0
-    }}
-  \caption{SRS updates oracle}
-  \label{fig:oraclesrs}
-\end{figure}
+
 }
 
 \section{Towards simulation extractability of multi-message protocols,
