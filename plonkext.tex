@@ -1125,7 +1125,7 @@ be a proof system such that
 Fiat--Shamir heuristic states that $\proofsystem_\fs$ is zero-knowledge
 non-interactive proof system for $\REL \in \RELGEN(\secparam)$.
 
-\subsection{Simulation extractable NIZKs from sigma protocols}
+\subsection{Simulation extractable NIZKs}
 Real life applications often require from a NIZK proof system to be
 non-malleable. That is, no adversary seeing a proof $\zkproof$ for a statement
 $\inp$ should be able to provide a new proof $\zkproof'$ related to $\zkproof$.
@@ -1186,6 +1186,7 @@ polynomially many simulated proofs for any statements it wishes.
   queries to $\ro$ and $\ro$'s answers.
 \end{definition}
 
+\begin{remark}
 Consider a sigma protocol $\sigmaprot = (\prover, \verifier, \simulator)$ that
 is specially sound and has a unique response property. Let $\sigmaprot_\fs =
 (\prover_\fs, \verifier_\fs, \simulator_\fs)$ be a NIZK obtained by applying the
@@ -1193,12 +1194,79 @@ Fiat--Shamir transform to $\sigmaprot$. Faust et al.~\cite{INDOCRYPT:FKMV12}
 show that every such $\sigmaprot_\fs$ is simulation-extractable. This result is
 presented in \cref{sec:forking_lemma} along with the instrumental forking lemma,
 cf.~\cite{CCS:BelNev06}.
+\end{remark}
 
 \changedm{ We propose a new notion of \emph{updatable simulation extractability}
   which assures that the proof system is secure even when an adversary is
   allowed to update the SRS \emph{and} get simulated proofs for the statements
-  it requires.
+  it requires. For the ease of exposition we begin with definitions of
+  \emph{updatable soundness} and \emph{updatable zero knowledge}
 
+  \begin{definition}[Updatable soundness~\cite{C:GKMMM18}]
+    Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
+    $\REL$. We say that $\ps$ is \emph{updatable knowledge sound} if for any
+    $\ppt$ adversary $\adv$, which is given oracle access to an updating oracle $\oraclesrs$
+    as defined on \cref{fig:oraclesrs}, there exists an extractor $\ext$ such
+    that probability
+    \[
+      \Pr
+      \left[
+        \begin{aligned}
+          \verifier(\REL, \srs, \inp, \zkproof) = 1, \\
+          \wit \gets \ext_\adv(\REL), 
+          \REL(\inp, \wit) = 0
+        \end{aligned}
+        \, \left| \,
+          \begin{aligned}
+          \srs \gets \bot \\
+          (\inp, \zkproof, \srs) \gets \adv^{\ro, \oraclesrs}(\REL)
+        \end{aligned}
+      \right.  \right] \leq \negl.
+    \]
+  \end{definition}
+
+  \begin{definition}[Updatable zero knowledge~\cite{C:GKMMM18}]
+    Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
+    $\REL$. We say that $\ps$ is \emph{updatable zero knowledge knowledge} if
+    for any adversary $\adv$, which is given oracle access to an updating oracle
+    $\oraclesrs$ (as defined on \cref{fig:oraclesrs}) and proving oracle
+    $\oracleo_b$, holds $\eps_0(\secpar) - \eps_1(\secpar) \leq \negl$, where
+    \[
+      \eps_0 = \Pr \left[
+        \begin{aligned}
+          \adv^{\oracleo_0, \oraclesrs}(\REL) = 1
+        \end{aligned}
+        \, \left| \,
+          \begin{aligned}
+            \kgen \gets \simkgen \\
+            \srsupdate \gets \simsrsupdate\\
+            \srs \gets \bot \\
+            Q \gets \emptyset
+        \end{aligned}
+      \right.  \right]
+  \]
+and
+  \[
+      \eps_1 = \Pr
+      \left[
+        \begin{aligned}
+          \adv^{\oracleo_1, \oraclesrs}(\REL) = 1
+        \end{aligned}
+        \, \left| \,
+          \begin{aligned}
+            \srs \gets \bot \\
+            Q \gets \emptyset
+          \end{aligned}
+        \right.
+        \right]
+      \]
+      Where the oracles $\oracleo_b$ on input $(\inp, \wit)$ returns $\zkproof =
+      \simulator(\REL, \srs, \td, \inp)$ if $b = 0$, and $\zkproof =
+      \prover(\REL, \srs, \inp, \wit)$ if $b = 1$.
+  \end{definition}
+  
+  Given updatable soundness and subversion zero-knowledge defined, we are ready to define updatable simulation
+  extractability
   \begin{definition}[Updatable simulation extractability]
     \label{def:upsimext}
     Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a computationally
@@ -1220,7 +1288,7 @@ cf.~\cite{CCS:BelNev06}.
 		\begin{aligned}
 			& \srs \gets \kgen(\REL), r \sample \RND{\advse}, \\
 			& (\inp_{\advse}, \zkproof_{\advse}) \gets \advse^{\simulator_\fs,
-			\ro, \oraclesrs} (\REL, \srs; r) 
+			\ro, \oraclesrs} (\REL; r) 
 		\end{aligned}
 		\right.\right]\,,
 	\]
@@ -1236,7 +1304,7 @@ cf.~\cite{CCS:BelNev06}.
 		\begin{aligned}
 			& \srs \gets \kgen(\REL), r \sample \RND{\advse},\\
 			& (\inp_{\advse}, \zkproof_{\advse}) \gets \advse^{\simulator_\fs,
-			\ro,\oraclesrs} (\REL, \srs; r) \\
+			\ro,\oraclesrs} (\REL; r) \\
 			& \wit_{\advse} \gets \ext_\se (\REL, \srs, \advse, r, \inp_{\advse}, \zkproof_{\advse},
 			Q, Q_\ro,) 
 		\end{aligned}
