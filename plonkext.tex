@@ -1201,32 +1201,38 @@ cf.~\cite{CCS:BelNev06}.
   which assures that the proof system is secure even when an adversary is
   allowed to update the SRS \emph{and} get simulated proofs for the statements
   it requires. Before we define the aforementioned notion we recall definitions
-  of \emph{updatable soundness} and \emph{updatable zero knowledge} as proposed
-  by Groth et al.~\cite{C:GKMMM18}.
+  of \emph{updatable soundness} and \emph{updatable zero knowledge}. Here, the
+  definitions slightly differ from the ones proposed by Groth et
+  al.~\cite{C:GKMMM18} as their approach allowed the simulator to create and
+  update the SRS on its own, while here we only assume that the simulator is
+  given trapdoors for the generated SRS and updates.
 
-  Here, differently from ``a standard'' way of generating the SRS of the proof
-  system for $\REL$, there is no single $\kgen$ algorithm which outputs the
-  string. Instead there $\kgen$ compounds of a tuple of algorithms:
-  $\algsetup, \algupdate, \algverifysrs$ such that
+  While an SRS is generated in an updatable manner, there is no single $\kgen$
+  algorithm which outputs the string. Instead $\kgen$ compounds of a tuple
+  of algorithms: $\algsetup, \algupdate, \algverifysrs$ such that
   \begin{description}
   \item[$\algsetup$] which takes a relation $\REL$ and outputs an SRS
-    $\srs$ and proof that $\srs$ has been computed correctly $\rho$.
+    $\srs$, its trapdoor $\td$, and proof that $\srs$ has been computed correctly $\rho$.
   \item[$\algupdate$] which takes a relation $\REL$, SRS $\srs$ and sequence of
-    proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs a new SRS
-    $\srs'$ and proof $\rho'$.
+    proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs a new
+    updated SRS $\srs'$, update trapdoor $\td$, and proof $\rho'$.
   \item[$\algverifysrs$] which takes a relation $\REL$, SRS $\srs$ and sequence of
     proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs $1$ if the
     sequence and SRS are accepted, or $0$ if they are not. 
   \end{description}
 
+  For the sake of simulatability we also define an algorithm $\combinetd$ which
+  takes trapdoor and updates' trapdoors and combine them into a single final
+  trapdoor $\td$, cf.~\cref{fig:oraclesrs}. 
 
- Similarly, the simulator is no longer a single algorithm but consists of
- $\algsimsetup, \algsimupdate, \algsimprove$ such that
- \begin{description}
- \item[$\algsimsetup$]
- \item[$\algsimupdate$]
- \item[$\algsimprove$]
- \end{description}
+
+ % Similarly, the simulator is no longer a single algorithm but consists of
+ % $\algsimsetup, \algsimupdate, \algsimprove$ such that
+ % \begin{description}
+ % \item[$\algsimsetup$]
+ % \item[$\algsimupdate$]
+ % \item[$\algsimprove$]
+ % \end{description}
 
   \begin{definition}[Updatable soundness~\cite{C:GKMMM18}]
     Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
@@ -1245,7 +1251,7 @@ cf.~\cite{CCS:BelNev06}.
         \, \left| \,
           \begin{aligned}
           \srs \gets \bot \\
-          (\inp, \zkproof, \srs) \gets \adv^{\ro, \oraclesrs}(\REL)
+          (\inp, \zkproof) \gets \adv^{\ro, \oraclesrs}(\REL)
         \end{aligned}
       \right.  \right] \leq \negl.
     \]
@@ -1258,22 +1264,25 @@ cf.~\cite{CCS:BelNev06}.
 		{
       \pcif \srs \neq \bot \pcthen \pcreturn 0 \\
       \pcif \intent = \setup \pcthen \\
-      \pcind (\srs', \rho') \sample \algsetup(\REL)\\
+      \pcind (\srs', \td', \rho') \sample \algsetup(\REL)\\
       \pcind Q \gets Q \cup \smallset{\rho'}\\
+      \pcind T \gets T \cup \smallset{\td'}\\
       \pcind \pcreturn (\srs', \rho')\\
       \pcif \intent = \update \pcthen\\
       \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
       \pcind \pcif b = 0 \pcthen \pcreturn 0 \\
-      \pcind (\srs', \rho') \sample \algupdate(\REL, \srs_n, (\rho)_{i = 1}^n)
+      \pcind (\srs', \td', \rho') \sample \algupdate(\REL, \srs_n, (\rho)_{i = 1}^n)
       \\
       \pcind Q \gets Q \cup \smallset{\rho'}\\
+      \pcind T \gets T \cup \smallset{\td'}\\
       \pcind \pcreturn (\srs', \rho') \\
       \pcif \intent = \final \\
       \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
       \pcind \pcif b = 0 \lor Q \cap \smallset{\rho_i}_i = \emptyset \pcthen \pcreturn
       0 \\
       \pcind \srs \gets \srs_n\\
-      \pcind \pcreturn \srs\\
+      \pcind \td \gets \combinetd(T)\\
+      \pcind \pcreturn (\srs, \td)\\
       \pcelse \pcreturn 0
     }}
   \caption{SRS updates oracle}
@@ -1293,10 +1302,10 @@ cf.~\cite{CCS:BelNev06}.
         \end{aligned}
         \, \left| \,
           \begin{aligned}
-            \kgen \gets \algsimsetup \\
-            \algupdate \gets \algsimupdate\\
-            \srs \gets \bot \\
-            Q \gets \emptyset
+            % \algsetup \gets \algsimsetup \\
+            % \algupdate \gets \algsimupdate\\
+            \srs \gets \bot, \td \gets \bot \\
+            Q \gets \emptyset, T \gets \emptyset
         \end{aligned}
       \right.  \right]
   \]
@@ -1309,8 +1318,8 @@ and
         \end{aligned}
         \, \left| \,
           \begin{aligned}
-            \srs \gets \bot \\
-            Q \gets \emptyset
+            \srs \gets \bot, \td \gets \bot \\
+            Q \gets \emptyset, T \gets \emptyset
           \end{aligned}
         \right.
         \right]
