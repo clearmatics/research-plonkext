@@ -1197,91 +1197,99 @@ presented in \cref{sec:forking_lemma} along with the instrumental forking lemma,
 cf.~\cite{CCS:BelNev06}.
 \end{remark}
 
-\changedm{ We propose a new notion of \emph{updatable simulation extractability}
-  which assures that the proof system is secure even when an adversary is
-  allowed to update the SRS \emph{and} get simulated proofs for the statements
-  it requires. Before we define the aforementioned notion we recall definitions
-  of \emph{updatable soundness} and \emph{updatable zero knowledge}. Here, the
-  definitions slightly differ from the ones proposed by Groth et
-  al.~\cite{C:GKMMM18} as their approach allowed the simulator to create and
-  update the SRS on its own, while here we only assume that the simulator is
-  given trapdoors for the generated SRS and updates.
+% \changedm{
+\color{blueish}
+\section{Simulation extraction meets SRS updatability}
 
-  While an SRS is generated in an updatable manner, there is no single $\kgen$
-  algorithm which outputs the string. Instead $\kgen$ compounds of a tuple
-  of algorithms: $\algsetup, \algupdate, \algverifysrs$ such that
-  \begin{description}
-  \item[$\algsetup$] which takes a relation $\REL$ and outputs an SRS
-    $\srs$, its trapdoor $\td$, and proof that $\srs$ has been computed correctly $\rho$.
-  \item[$\algupdate$] which takes a relation $\REL$, SRS $\srs$ and sequence of
-    proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs a new
-    updated SRS $\srs'$, update trapdoor $\td$, and proof $\rho'$.
-  \item[$\algverifysrs$] which takes a relation $\REL$, SRS $\srs$ and sequence of
-    proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs $1$ if the
-    sequence and SRS are accepted, or $0$ if they are not. 
-  \end{description}
+We propose a new notion of \emph{updatable simulation extractability} which
+assures that the proof system is secure even when an adversary is allowed to
+update the SRS \emph{and} get simulated proofs for the statements it
+requires. Before we define the aforementioned notion we recall definitions of
+\emph{updatable soundness} and \emph{updatable zero knowledge}. Here, the
+definitions slightly differ from the ones proposed by Groth et
+al.~\cite{C:GKMMM18} as their approach allowed the simulator to create and
+update the SRS on its own, while here we only assume that the simulator is given
+trapdoors for the generated SRS and updates.
 
-  For the sake of simulatability we also define an algorithm $\combinetd$ which
-  takes trapdoor and updates' trapdoors and combine them into a single final
-  trapdoor $\td$, cf.~\cref{fig:oraclesrs}. 
+While an SRS is generated in an updatable manner, there is no single $\kgen$
+algorithm which outputs the string. Instead $\kgen$ compounds of a tuple of
+algorithms: $\algsetup, \algupdate, \algverifysrs$ such that
+\begin{description}
+\item[$\algsetup$] which takes a relation $\REL$ and outputs an SRS $\srs$, its
+  trapdoor $\td$, and proof that $\srs$ has been computed correctly $\rho$.
+\item[$\algupdate$] which takes a relation $\REL$, SRS $\srs$ and sequence of
+  proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs a new updated
+  SRS $\srs'$, update trapdoor $\td$, and proof $\rho'$.
+\item[$\algverifysrs$] which takes a relation $\REL$, SRS $\srs$ and sequence of
+  proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs $1$ if the
+  sequence and SRS are accepted, or $0$ if they are not.
+\end{description}
+
+For the sake of simulatability we also define an algorithm $\combinetd$ which
+takes trapdoor and updates' trapdoors and combine them into a single final
+trapdoor $\td$, cf.~\cref{fig:oraclesrs}.
 
 
- % Similarly, the simulator is no longer a single algorithm but consists of
- % $\algsimsetup, \algsimupdate, \algsimprove$ such that
+% Similarly, the simulator is no longer a single algorithm but consists of
+% $\algsimsetup, \algsimupdate, \algsimprove$ such that
  % \begin{description}
  % \item[$\algsimsetup$]
  % \item[$\algsimupdate$]
  % \item[$\algsimprove$]
  % \end{description}
 
-  \begin{definition}[Updatable soundness~\cite{C:GKMMM18}]
-    Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
-    $\REL$. We say that $\ps$ is \emph{updatable knowledge sound} if for any
-    $\ppt$ adversary $\adv$, which is given oracle access to an updating oracle $\oraclesrs$
-    as defined on \cref{fig:oraclesrs}, there exists an extractor $\ext$ such
-    that probability
-    \[
-      \Pr
-      \left[
+\begin{definition}[Updatable soundness~\cite{C:GKMMM18}]
+  Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
+  $\REL$. We say that $\ps$ is \emph{updatable knowledge sound} if for any
+  $\ppt$ adversary $\adv$, which is given oracle access to an updating oracle
+  $\oraclesrs$ as defined on \cref{fig:oraclesrs}, there exists an extractor
+  $\ext$ such that probability
+  \[
+    \Pr \left[
         \begin{aligned}
           \verifier(\REL, \srs, \inp, \zkproof) = 1, \\
-          \wit \gets \ext_\adv(\REL), 
-          \REL(\inp, \wit) = 0
+          \wit \gets \ext_\adv(\REL), \REL(\inp, \wit) = 0
         \end{aligned}
         \, \left| \,
           \begin{aligned}
-          \srs \gets \bot \\
-          (\inp, \zkproof) \gets \adv^{\ro, \oraclesrs}(\REL)
-        \end{aligned}
-      \right.  \right] \leq \negl.
+            \srs \gets \bot \\
+            (\inp, \zkproof) \gets \adv^{\ro, \oraclesrs}(\REL)
+          \end{aligned}
+        \right.  \right] \leq \negl.
     \]
-  \end{definition}
+\end{definition}
 
-  \begin{figure}[t]
+\begin{figure}[t]
   	\centering
 		\fbox{
-		\procedure{$\oraclesrs(\intent, \srs_n, (\rho_i)_{i = 1}^{n})$}		
+		\procedure{$\oraclesrs(\intent, \srs_n, (\td_{j})_{j = 1}^m, (\rho_i)_{i = 1}^{n})$}		
 		{
       \pcif \srs \neq \bot \pcthen \pcreturn 0 \\
       \pcif \intent = \setup \pcthen \\
       \pcind (\srs', \td', \rho') \sample \algsetup(\REL)\\
       \pcind Q \gets Q \cup \smallset{\rho'}\\
-      \pcind T \gets T \cup \smallset{\td'}\\
+      \pcind T \gets (T, \td')\\
       \pcind \pcreturn (\srs', \rho')\\
       \pcif \intent = \update \pcthen\\
       \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
-      \pcind \pcif b = 0 \pcthen \pcreturn 0 \\
-      \pcind (\srs', \td', \rho') \sample \algupdate(\REL, \srs_n, (\rho)_{i = 1}^n)
+      %\pcind b' \gets \algverifytd(\REL, \srs_n, \td_n)\\
+      \pcind \pcif b = 0  \pcthen \pcreturn 0 \\
+      \pcind (\srs', \td', \rho') \sample \algupdate(\REL, \srs_n, (\rho)_{i =
+        1}^n)
       \\
       \pcind Q \gets Q \cup \smallset{\rho'}\\
-      \pcind T \gets T \cup \smallset{\td'}\\
+      \pcind T \gets (T, (\td_{j})_{j = 1}^m, \td')\\
       \pcind \pcreturn (\srs', \rho') \\
       \pcif \intent = \final \\
       \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
-      \pcind \pcif b = 0 \lor Q \cap \smallset{\rho_i}_i = \emptyset \pcthen \pcreturn
+      \pcind T \gets (T, (\td_{j})_{j = 1}^m)\\
+      \pcind \td \gets \combinetd(T)\\
+      \pcind b' \gets \algverifytd(\REL, \srs_n, \td)\\
+      \pcind \pcif b = 0 \lor b' = 0 \lor Q \cap \smallset{\rho_i}_i = \emptyset
+      \pcthen \pcreturn
       0 \\
       \pcind \srs \gets \srs_n\\
-      \pcind \td \gets \combinetd(T)\\
+      %\pcind \td \gets \combinetd(T)\\
       \pcind \pcreturn (\srs, \td)\\
       \pcelse \pcreturn 0
     }}
@@ -1294,11 +1302,11 @@ cf.~\cite{CCS:BelNev06}.
     $\REL$. We say that $\ps$ is \emph{updatable zero knowledge knowledge} if
     for any adversary $\adv$, which is given oracle access to an updating oracle
     $\oraclesrs$ (as defined on \cref{fig:oraclesrs}) and proving oracle
-    $\oracleo_b$, holds $\eps_0(\secpar) - \eps_1(\secpar) \leq \negl$, where
+    $\oracleo_b$, holds $\abs{\eps_0(\secpar) - \eps_1(\secpar)} \leq \negl$, and
     \[
-      \eps_0 = \Pr \left[
+      \eps_b = \Pr \left[
         \begin{aligned}
-          \adv^{\oracleo_0, \oraclesrs}(\REL) = 1
+          \adv^{\oracleo_b, \oraclesrs}(\REL) = 1
         \end{aligned}
         \, \left| \,
           \begin{aligned}
@@ -1307,41 +1315,44 @@ cf.~\cite{CCS:BelNev06}.
             \srs \gets \bot, \td \gets \bot \\
             Q \gets \emptyset, T \gets \emptyset
         \end{aligned}
-      \right.  \right]
+      \right.  \right].
   \]
-and
-  \[
-      \eps_1 = \Pr
-      \left[
-        \begin{aligned}
-          \adv^{\oracleo_1, \oraclesrs}(\REL) = 1
-        \end{aligned}
-        \, \left| \,
-          \begin{aligned}
-            \srs \gets \bot, \td \gets \bot \\
-            Q \gets \emptyset, T \gets \emptyset
-          \end{aligned}
-        \right.
-        \right]
-      \]
-      Where the oracles $\oracleo_b$ on input $(\inp, \wit)$ returns $\zkproof =
+% and
+%   \[
+%       \eps_1 = \Pr
+%       \left[
+%         \begin{aligned}
+%           \adv^{\oracleo_1, \oraclesrs}(\REL) = 1
+%         \end{aligned}
+%         \, \left| \,
+%           \begin{aligned}
+%             \srs \gets \bot, \td \gets \bot \\
+%             Q \gets \emptyset, T \gets \emptyset
+%           \end{aligned}
+%         \right.
+%         \right]
+%       \]
+      The oracle $\oracleo_b$ on input $(\inp, \wit)$ returns $\zkproof =
       \simulator(\REL, \srs, \td, \inp)$ if $b = 0$, and $\zkproof =
       \prover(\REL, \srs, \inp, \wit)$ if $b = 1$.
   \end{definition}
   
   Given updatable soundness and subversion zero-knowledge defined, we are ready to define updatable simulation
   extractability
-  \begin{definition}[Updatable simulation extractability]
+  \begin{definition}[Updatable Special simulation extractability (USSE)]
     \label{def:upsimext}
     Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a computationally
     special-sound HVZK proof and
     $\ps_\fs = (\kgen_\fs, \prover_\fs, \verifier_\fs, \simulator_\fs)$ be $\ps$
-    transformed by the Fiat--Shamir transform. We say that $\ps_\fs$ is
+    transformed by the Fiat--Shamir transform. Let $\simulator_{\fs}$ be a
+    simulator providing simulated proofs for correct statements, $\oraclesrs$ be
+    the SRS update oracle (cf.~\cref{fig:oraclesrs}) and $\ro$ be a random oracle.
+    Let $\adv$ be a $\ppt$ adversary that is given oracle access to
+    $\simulator_\fs$, $\ro$, and $\oraclesrs$, such that $\ro$ and $\oraclesrs$
+    are simulated for $\adv$ by $\simulator_\fs$.  We say that $\ps_\fs$ is
     \emph{updatable simulation-extractable} with \emph{extraction error} $\nu$
-    if for any $\ppt$ adversary $\adv$ that is given oracle access to a random
-    oracle $\ro$, simulator $\simulator_\fs$, and SRS update oracle $\oraclesrs$
-    defined at \cref{fig:oraclesrs}, and produces an accepting transcript of
-    $\ps$ with probability $\accProb$,
+    if for any such $\adv$ which produces an accepting transcript of $\ps$ with
+    probability $\accProb$, i.e.~
     	\[
 		\accProb = \Pr \left[
 		\begin{aligned}
@@ -1385,16 +1396,64 @@ and
   queries to $\ro$ and $\ro$'s answers.
 \end{definition}
 
-Groth et al.~\cite{C:GKMMM18} shown that to assure updatable (knowledge)
+Groth et al.~\cite[Lemma 6]{C:GKMMM18} shown that to assure updatable (knowledge)
 soundness of some proof system it is enough to show that it remains (knowledge)
 sound if the adversary is allowed to make a single update. Here we show an
 equivalent result, stating that to show updatable simulation extractability it is
 enough to show that this property holds if the adversary can make a single
 update as well. 
-\begin{lemma}[Single adversarial update is equivalent to given access to $\oraclesrs$.]
-  \end{lemma}
+\begin{lemma}[Single adversarial update implies full special updatable
+  simulation extractability.]
+  Let $\ps$ be a proof system that is SSE against adversaries who can query
+  $\oraclesrs$ on $(\setup, \bot, \bot, bot)$ only once and then on
+  $(\final, \srs_n, (\td_j)_{j = 1}^m, (\rho_i)_{i = 1}^n)$ for
+  $m \leq m \leq 2$. Then $\ps$ is SSE against adversaries who can make
+  polynomially many calls to $\oraclesrs$.
+\end{lemma}
+\begin{proof}
+  Similarly to \cite{C:GKMMM18} we assume that $\ps$ is secure against
+  advresaries who could perform a single update and build a SSE single-update
+  adversary $\bdv$ which outputs an acceptable proof with probability
+  $\accProb_\bdv$. By the assumption, there exists an extractor $\ext_\bdv$ who
+  from a tree of transcripts obtained from $\bdv$ with probability at least
+  $\frkProb_\bdv$. We show how $\bdv$ and its extractor can be used to extract
+  the witness from a proof provided by some USSE adversary $\adv$.
 
-}
+  The adversary $\bdv$ proceeds as follows:
+  \begin{itemize}
+  \item Run $(\setup, \bot, \bot, \bot)$ and obtain SRS $\srs_s$ and proof
+    $\rho_s$.
+  \item On $\adv$'s queries to the random oracle, pass the queries to the
+    random oracle and send back the answers.
+  \item On $\adv$'s queries to $\oraclesrs$, let $k$ be the index of $\adv$'s
+    query to $\oraclesrs$.
+    \begin{description}
+    \item [$(\setup, \bot, \bot, \bot)$:] Pick randomness $r_k$ and internally
+      run $(\srs', \td', \rho') \gets \algsetup(\REL; r_k)$;
+    \item [$(\update, \srs_{n_k}, (\td_j)_{j = 1}^{m_k}, (\rho_i)_{i = 1}^{n_k})$:] Pick
+      randomness $r_k$ and run $\algverifysrs(\REL, \srs_{n_k}, (\rho_i)_{i = 1}^{n_k})$
+      return $0$ if the verification fails. Otherwise, internally run
+      $(\srs', \td', \rho') \gets \algupdate(\REL, \srs_{n_k}, (\rho_i)_{i = 1}^{n_k};
+      r_k)$.
+    \item [$(\final, \srs_{n_k}, (\td_j)_{j = 1}^{m_k}, (\rho_i)_{i =
+        1}^{n_k})$:] Let $N$ be the number of updates requested by $\adv$, 
+      \begin{itemize}
+      \item Combine the updates requested by $\adv$ into a single update,
+        i.e.~run $\algupdate(\REL, \srs_s, \rho_s; \prod_{k = 1}^N r_k)$ and
+        get $(\srs_u, \rho_u)$. 
+      \item Call real oracle $\oraclesrs$ on $(\final, \srs_u, (\rho_s,
+        \rho_u))$. By the construction $\srs_u = \srs_N$. 
+      \end{itemize}
+    \end{description}
+  \item On $\adv$'s queries to the simulator,
+    \begin{itemize}
+    \item if the SRS has been set.
+    \item if the SRS has not been set yet.
+    \end{itemize}
+  \end{itemize}
+\end{proof}
+\color{black}
+%}
 
 \section{Towards simulation extractability of multi-message protocols,
   definitions and lemmas}
