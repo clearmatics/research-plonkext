@@ -1430,25 +1430,27 @@ update as well.
     \begin{description}
     \item [$(\setup, \bot, \bot, \bot)$:] Pick randomness $r_k$ and internally
       run $(\srs', \td', \rho') \gets \algsetup(\REL; r_k)$;
-    \item [$(\update, \srs_{n_k}, (\td_j)_{j = 1}^{m_k}, (\rho_i)_{i = 1}^{n_k})$:] Pick
-      randomness $r_k$ and run $\algverifysrs(\REL, \srs_{n_k}, (\rho_i)_{i = 1}^{n_k})$
+    \item [$(\update, \srs_{k}, (\td_j)_{j = 1}^{m_k}, (\rho_i)_{i = 1}^{k})$:] Pick
+      randomness $r_k$ and run $\algverifysrs(\REL, \srs_{k}, (\rho_i)_{i = 1}^{k})$
       return $0$ if the verification fails. Otherwise, internally run
-      $(\srs', \td', \rho') \gets \algupdate(\REL, \srs_{n_k}, (\rho_i)_{i = 1}^{n_k};
+      $(\srs', \td', \rho') \gets \algupdate(\REL, \srs_{k}, (\rho_i)_{i = 1}^{k};
       r_k)$.
-    \item [$(\final, \srs_{n_k}, (\td_j)_{j = 1}^{m_k}, (\rho_i)_{i =
-        1}^{n_k})$:] Let $N$ be the number of updates requested by $\adv$, 
+    \item [$(\final, \srs_{n}, (\td_j)_{j = 1}^{m_n}, (\rho_i)_{i = 1}^{n})$:]
+      ($n$ is the index of the last $\adv$'s query to
+      $\oraclesrs$.)%Let $n$ be the number of updates requested by $\adv$,
       \begin{itemize}
       \item Combine the updates requested by $\adv$ into a single update,
-        i.e.~run $\algupdate(\REL, \srs_s, \rho_s; \prod_{k = 1}^N r_k)$ and
+        i.e.~run $\algupdate(\REL, \srs_s, \rho_s; \prod_{k = 1}^n r_k)$ and
         get $(\srs_u, \rho_u)$. 
-      \item Call real oracle $\oraclesrs$ on $(\final, \srs_u, (\rho_s,
-        \rho_u))$. By the construction $\srs_u = \srs_N$. 
+      \item Call the real oracle $\oraclesrs$ on $(\final, \srs_u, \smallset{\rho_s,
+        \rho_u})$. By the construction $\srs_u = \srs_n$. 
       \end{itemize}
     \end{description}
   \item On $\adv$'s queries to the simulator,
     \begin{itemize}
-    \item if the SRS has been set.
-    \item if the SRS has not been set yet.
+    \item if the SRS has been set, pass the queries to the simulator $\simulator_\fs$;
+    \item if the SRS has not been set yet. \michals{11.05}{Problem, since $\bdv$
+      run $\setup$, he may not know the whole trapdoor at this point.}
     \end{itemize}
   \end{itemize}
 \end{proof}
