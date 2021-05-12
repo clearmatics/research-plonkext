@@ -1736,14 +1736,14 @@ soundness -- we shall define how SRS-updatability affects it and coin
     \end{description}
   \end{itemize}
 
-  Eventually, the SRS is set and $\adv$ returns an instance $\inp$ and a
+  Eventually, the SRS is set and $\adv$ returns an instance $\inp$ and an
   $(n_1, \ldots, n_\mu)$-tree of acceptable transcripts $\tree$. The same
-  instance and tree are returned by $\bdv$. From the lemma's assumptions there
-  $\extt$ that given $\tree$ outputs the witness corresponding to $\inp$ with
-  probability at least $(1 - \epsss)$. Let $\extt'$ be an extractor that
-  \michals{12.05}{Issue -- ordering of quantifiers -- the extractor should work
-    for all UCSS adversaries, does it? or it works only for $\adv$?}
-  \qed
+  instance and tree are returned by $\bdv$. From the lemma's assumptions $\extt$
+  given $\tree$ outputs the witness corresponding to $\inp$ with probability at
+  least $(1 - \epsss)$. Since $\bdv$ can simulate every UCSS adversary we may
+  define $\extt' = \extt$.\michals{12.05}{Check ordering of quantifiers -- the
+    extractor should work for all UCSS adversaries, does it? or it works only
+    for $\adv$?}  \qed
 \end{proof}
 
 Given updatable soundness and subversion zero-knowledge defined, we are ready to
