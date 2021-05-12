@@ -1209,303 +1209,6 @@ cf.~\cite{CCS:BelNev06}.
 \end{remark}
 
 % \changedm{
-\color{blueish}
-\section{Simulation extraction meets SRS updatability}
-
-We propose a new notion of \emph{updatable special simulation extractability} which
-assures that the proof system is secure even when an adversary is allowed to
-update the SRS \emph{and} get simulated proofs for the statements it
-requires. Before we define the aforementioned notion we recall definitions of
-\emph{updatable soundness} and \emph{updatable zero knowledge}. Here, the
-definitions slightly differ from the ones proposed by Groth et
-al.~\cite{C:GKMMM18} as their approach allowed the simulator to create and
-update the SRS on its own, while here we only assume that the simulator is given
-trapdoors for the generated SRS and updates.
-
-While an SRS is generated in an updatable manner, there is no single $\kgen$
-algorithm which outputs the string. Instead $\kgen$ compounds of a tuple of
-algorithms:
-$\algsetup, \algupdate, \algverifysrs, \algverifytd, \combinetd, \combineup$
-such that
-\begin{description}
-\item[$\algsetup$] takes a relation $\REL$ and outputs an SRS $\srs$, its
-  trapdoor $\td$, and proof that $\srs$ has been computed correctly $\rho$.
-\item[$\algupdate$] takes a relation $\REL$, SRS $\srs$, and sequence of
-  proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs a new updated
-  SRS $\srs'$, update trapdoor $\td$, and proof $\rho'$.
-\item[$\algverifysrs$] takes a relation $\REL$, SRS $\srs$ and sequence of
-  proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs $1$ if the
-  sequence and SRS are accepted, or $0$ if they are not.
-\item[$\combinetd$] takes all pieces of the trapdoor -- these stored in
-  $T$ and these provided by the SRS-updating party in its request and combine
-  them into a single trapdoor.
-\item[$\algverifytd$] takes the trapdoor output by $\combinetd$ and checks
-  whether it is correct given an SRS correctly verified by $\algverifysrs$. 
-\end{description}
-
-For the sake of practicality, we also require some commutative properties of
-trapdoors, SRSs and their updates. More precisely, we assume that there is an
-efficient algorithm $\combineup$ such that
-\begin{description}
-  \item[$\combineup$] takes a sequence of updates and outputs a
-single update equivalent to the sequence. More precisely 
-\begin{equation*}
-  \algupdate(\REL, \srs_n, (\rho)_{i = 1}^{n}; \prod_{i = 1}^n r_i) =
-  \combineup( \algupdate(\REL, \srs_1, (\rho_1); r_1), \ldots, \algupdate(\REL,
-  \srs_n, (\rho_n); r_n),
-\end{equation*}
-\end{description}
-
-% Similarly, the simulator is no longer a single algorithm but consists of
-% $\algsimsetup, \algsimupdate, \algsimprove$ such that
- % \begin{description}
- % \item[$\algsimsetup$]
- % \item[$\algsimupdate$]
- % \item[$\algsimprove$]
- % \end{description}
-
-\begin{definition}[Updatable soundness~\cite{C:GKMMM18}]
-  Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
-  $\REL$. We say that $\ps$ is \emph{updatable knowledge sound} if for any
-  $\ppt$ adversary $\adv$, which is given oracle access to an updating oracle
-  $\oraclesrs$ as defined on \cref{fig:oraclesrs}, there exists an extractor
-  $\ext$ such that probability
-  \[
-    \Pr \left[
-        \begin{aligned}
-          \verifier(\REL, \srs, \inp, \zkproof) = 1, \\
-          \wit \gets \ext_\adv(\REL), \REL(\inp, \wit) = 0
-        \end{aligned}
-        \, \left| \,
-          \begin{aligned}
-            \srs \gets \bot \\
-            (\inp, \zkproof) \gets \adv^{\ro, \oraclesrs}(\REL)
-          \end{aligned}
-        \right.  \right] \leq \negl.
-    \]
-\end{definition}
-
-\begin{figure}[t]
-  	\centering
-		\fbox{
-		\procedure{$\oraclesrs(\intent, \srs_n, (\td_{j})_{j = 1}^m, (\rho_i)_{i = 1}^{n})$}		
-		{
-      \pcif \srs \neq \bot \pcthen \pcreturn 0 \\
-      \pcif \intent = \setup \pcthen \\
-      \pcind (\srs', \td', \rho') \sample \algsetup(\REL)\\
-      \pcind Q \gets Q \cup \smallset{\rho'}\\
-      \pcind T \gets (T, \td')\\
-      \pcind \pcreturn (\srs', \rho')\\
-      \pcif \intent = \update \pcthen\\
-      \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
-      \pcind b' \gets \algverifytd(\REL, \srs_n, \combinetd((T, (\td_j)_{j = 1}^m))\\
-      \pcind \pcif b = 0  \lor b' = 0 \pcthen \pcreturn 0 \\
-      \pcind (\srs', \td', \rho') \sample \algupdate(\REL, \srs_n, (\rho)_{i =
-        1}^n)
-      \\
-      \pcind Q \gets Q \cup \smallset{\rho'}\\
-      \pcind T \gets (T, (\td_{j})_{j = 1}^m, \td')\\
-      \pcind \pcreturn (\srs', \rho') \\
-      \pcif \intent = \final \\
-      \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
-      \pcind T \gets (T, (\td_{j})_{j = 1}^m)\\
-      \pcind \td \gets \combinetd(T)\\
-      \pcind b' \gets \algverifytd(\REL, \srs_n, \td)\\
-      \pcind \pcif b = 0 \lor b' = 0 \lor Q \cap \smallset{\rho_i}_i = \emptyset
-      \pcthen \pcreturn
-      0 \\
-      \pcind \srs \gets \srs_n\\
-      %\pcind \td \gets \combinetd(T)\\
-      \pcind \pcreturn (\srs, \td)\\
-      \pcelse \pcreturn 0
-    }}
-  \caption{SRS updates oracle}
-  \label{fig:oraclesrs}
-\end{figure}
-  
-  \begin{definition}[Updatable zero knowledge~\cite{C:GKMMM18}]
-    Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
-    $\REL$. We say that $\ps$ is \emph{updatable zero knowledge knowledge} if
-    for any adversary $\adv$, which is given oracle access to an updating oracle
-    $\oraclesrs$ (as defined on \cref{fig:oraclesrs}) and proving oracle
-    $\oracleo_b$, holds $\abs{\eps_0(\secpar) - \eps_1(\secpar)} \leq \negl$, and
-    \[
-      \eps_b = \Pr \left[
-        \begin{aligned}
-          \adv^{\oracleo_b, \oraclesrs}(\REL) = 1
-        \end{aligned}
-        \, \left| \,
-          \begin{aligned}
-            % \algsetup \gets \algsimsetup \\
-            % \algupdate \gets \algsimupdate\\
-            \srs \gets \bot, \td \gets \bot \\
-            Q \gets \emptyset, T \gets \emptyset
-        \end{aligned}
-      \right.  \right].
-  \]
-% and
-%   \[
-%       \eps_1 = \Pr
-%       \left[
-%         \begin{aligned}
-%           \adv^{\oracleo_1, \oraclesrs}(\REL) = 1
-%         \end{aligned}
-%         \, \left| \,
-%           \begin{aligned}
-%             \srs \gets \bot, \td \gets \bot \\
-%             Q \gets \emptyset, T \gets \emptyset
-%           \end{aligned}
-%         \right.
-%         \right]
-%       \]
-      The oracle $\oracleo_b$ on input $(\inp, \wit)$ returns $\zkproof =
-      \simulator(\REL, \srs, \td, \inp)$ if $b = 0$, and $\zkproof =
-      \prover(\REL, \srs, \inp, \wit)$ if $b = 1$.
-  \end{definition}
-  
-  Given updatable soundness and subversion zero-knowledge defined, we are ready
-  to define updatable special simulation extractability
-  \begin{definition}[Updatable special simulation extractability (USSE)]
-    \label{def:upsimext}
-    Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a computationally
-    special-sound HVZK proof and
-    $\ps_\fs = (\kgen_\fs, \prover_\fs, \verifier_\fs, \simulator_\fs)$ be $\ps$
-    transformed by the Fiat--Shamir transform. Let $\simulator_{\fs}$ be a
-    simulator providing simulated proofs for correct statements, $\oraclesrs$ be
-    the SRS update oracle (cf.~\cref{fig:oraclesrs}) and $\ro$ be a random oracle.
-    Let $\adv$ be a $\ppt$ adversary that is given oracle access to
-    $\simulator_\fs$, $\ro$, and $\oraclesrs$, such that $\ro$ and $\oraclesrs$
-    are simulated for $\adv$ by $\simulator_\fs$.  We say that $\ps_\fs$ is
-    \emph{updatable special simulation-extractable} with \emph{extraction error} $\nu$
-    if for any such $\adv$ which produces an accepting transcript of $\ps$ with
-    probability $\accProb$, i.e.~
-    	\[
-		\accProb = \Pr \left[
-		\begin{aligned}
-			& \verifier_\fs(\REL, \srs, \inp_{\advse}, \zkproof_{\advse}) = 1,\\
-			& (\inp_{\advse}, \zkproof_{\advse}) \not\in Q
-		\end{aligned}
-		\, \left| \,
-		\begin{aligned}
-			& r \sample \RND{\advse}, \\
-			& (\inp_{\advse}, \zkproof_{\advse}) \gets \advse^{\simulator_\fs, \ro,
-        \oraclesrs} (\REL; r)
-		\end{aligned}
-		\right.\right]\,,
-	\]
-	probability
-	\[
-		\frkProb = \Pr \left[
-		\begin{aligned}
-			& \verifier_\fs(\REL, \srs, \inp_{\advse}, \zkproof_{\advse}) = 1,\\
-			& (\inp_{\advse}, \zkproof_{\advse}) \not\in Q,\\
-			& \REL(\inp_{\advse}, \wit_{\advse}) = 1
-		\end{aligned}
-		\, \left| \,
-		\begin{aligned}
-			& r \sample \RND{\advse},\\
-			& (\inp_{\advse}, \zkproof_{\advse}) \gets \advse^{\simulator_\fs,
-        \ro,\oraclesrs} (\REL; r) \\
-			& \wit_{\advse} \gets \ext_\se (\REL, \srs, \advse, r, \inp_{\advse},
-      \zkproof_{\advse}, Q, Q_\ro,)
-		\end{aligned}
-		\right.\right]
-	\]
-	is at at least 
-	\[
-		\frkProb \geq \frac{1}{\poly} (\accProb - \nu)^d - \eps(\secpar)\,,
-	\]
-	for some polynomial $\poly$, constant $d$ and negligible $\eps$ whenever
-  $\accProb \geq \nu$. List $Q$ contains all $(\inp, \zkproof)$ pairs where
-  $\inp$ is an instance provided to the simulator by the adversary and
-  $\zkproof$ is the simulator's answer. List $Q_\ro$ contains all $\advse$'s
-  queries to $\ro$ and $\ro$'s answers.
-\end{definition}
-
-Groth et al.~\cite[Lemma 6]{C:GKMMM18} shown that to assure updatable (knowledge)
-soundness of some proof system it is enough to show that it remains (knowledge)
-sound if the adversary is allowed to make a single update. Here we show an
-equivalent result, stating that to show updatable special simulation extractability it is
-enough to show that this property holds if the adversary can make a single
-update as well. 
-\begin{lemma}[Single adversarial update implies full special updatable
-  special simulation extractability.]
-  Let $\ps$ be a proof system that is SSE against adversaries who can query
-  $\oraclesrs$ on $(\setup, \bot, \bot, \bot)$ only once and then on
-  $(\final, \srs_n, (\td_j)_{j = 1}^m, (\rho_i)_{i = 1}^n)$ for
-  $m \leq m \leq 2$. Then $\ps$ is SSE against adversaries who can make
-  polynomially many calls to $\oraclesrs$. That is, there exists an extractor
-  $\ext_\adv$ that outputs a corresponding witness with probability at least
-  $\frkProb_\adv \geq \infrac{(\accProb_\adv - \nu)^d}{\poly} - \eps(\secpar)$
-  for $\accProb_\adv$ being a probability that a USSE adversary $\adv$ outputs
-  an acceptable proof and $\nu$ being the extraction error.
-\end{lemma}
-\begin{proof}
-  % \michals{12.05}{Write down properties for the SRS updates -- that they can be
-  %   combined etc.}
-  Similarly to \cite{C:GKMMM18} we assume that $\ps$ is secure against
-  advresaries who could perform a single update and build a SSE single-update
-  adversary $\bdv$ which outputs an acceptable proof with probability
-  $\accProb_\bdv$. By the assumption, there exists an extractor $\ext_\bdv$ who
-  from a tree of transcripts obtained from $\bdv$ with probability at least
-  $\frkProb_\bdv$. We show how $\bdv$ and its extractor can be used to extract
-  the witness from a proof provided by some USSE adversary $\adv$ which produces
-  an acceptable proof with probability $\accProb_\adv$.  The adversary $\bdv$
-  proceeds as follows:
-  \begin{itemize}
-  \item Run $(\setup, \bot, \bot, \bot)$ and obtain SRS $\srs_s$ and proof
-    $\rho_s$.
-  \item On $\adv$'s queries to the random oracle, pass the queries to the
-    random oracle and send back the answers.
-  \item On $\adv$'s queries to $\oraclesrs$, let $k$ be the index of $\adv$'s
-    query to $\oraclesrs$.
-    \begin{description}
-    \item [$(\setup, \bot, \bot, \bot)$:] Pick randomness $r_k$ and internally
-      run $(\srs', \td', \rho') \gets \algsetup(\REL; r_k)$;
-    \item [$(\update, \srs_{k}, (\td_j)_{j = 1}^{m_k}, (\rho_i)_{i = 1}^{k})$:] Pick
-      randomness $r_k$ and run $\algverifysrs(\REL, \srs_{k}, (\rho_i)_{i = 1}^{k})$
-      return $0$ if the verification fails. Otherwise, internally run
-      $(\srs', \td', \rho') \gets \algupdate(\REL, \srs_{k}, (\rho_i)_{i = 1}^{k};
-      r_k)$.
-    \item [$(\final, \srs_{n}, (\td_j)_{j = 1}^{m_n}, (\rho_i)_{i = 1}^{n})$:]
-      ($n$ is the index of the last $\adv$'s query to
-      $\oraclesrs$.)%Let $n$ be the number of updates requested by $\adv$,
-      \begin{itemize}
-      \item Combine the updates requested by $\adv$ into a single update,
-        i.e.~run $\algupdate(\REL, \srs_s, \rho_s; \prod_{k = 1}^n r_k)$ and
-        get $(\srs_u, \rho_u)$. 
-      \item Call the real oracle $\oraclesrs$ on $(\final, \srs_u, \smallset{\rho_s,
-        \rho_u})$. By the construction $\srs_u = \srs_n$. That is, the SRS finalized
-      by the adversary $\adv$ is the same as the SRS finalized by $\bdv$.
-      \end{itemize}
-    \end{description}
-  \item On $\adv$'s queries to the simulator,
-    \begin{itemize}
-    \item if the SRS has been set (i.e.~$\adv$ called $\final$), pass the queries to the simulator $\simulator_\fs$;
-    \item if the SRS has not been set yet: Denote by $\srs_k$ the current SRS,
-      since all SRS updates were performed internally by $\bdv$, it knows
-      trapdoor $\td_k$ corresponding to $\srs_k$ and thus is able to provide
-      $\adv$ with the simulated proofs for the instances it requests.   
-      % \michals{11.05}{Problem, since $\bdv$
-      % run $\setup$, he may not know the whole trapdoor at this point.}
-    \end{itemize}
-  \end{itemize}
-
-  Eventually, the SRS is set and $\adv$ returns an instance $\inp$ and its proof
-  $\zkproof$. The same instance and proof are returned by $\bdv$. Note,
-  probability that $\bdv$ outputs an acceptable proof equals probability that
-  $\adv$ does, i.e.~$\accProb_\bdv = \accProb_\adv$. Furthermore, from the lemma's
-  assumptions there exists and extractor $\ext_\bdv$ which given oracle access
-  to $\bdv$ reveals the corresponding witness with probability $\frkProb_\bdv
-  \geq \infrac{(\accProb_\bdv - \nu)^d}{\poly} - \eps(\secpar)$, hence
-  \[
-    \frkProb_\adv \geq \infrac{(\accProb_\adv - \nu)^d}{\poly} - \eps(\secpar)\,.
-  \]
-  \qed
-\end{proof}
-
-\color{black}
-%}
 
 \section{Towards special simulation extractability of multi-message protocols,
   definitions and lemmas}
@@ -1823,6 +1526,325 @@ witness or can be used to break some computational assumption.
 Since we do not utilise the classical special soundness (that holds for all,
 even unbounded, adversaries) all references to that property should be
 understood as references to its computational version.
+
+\color{blueish}
+\section{Simulation extraction meets SRS updatability}
+
+We propose a new notion of \emph{updatable special simulation extractability} which
+assures that the proof system is secure even when an adversary is allowed to
+update the SRS \emph{and} get simulated proofs for the statements it
+requires. Before we define the aforementioned notion we recall definitions of
+\emph{updatable soundness} and \emph{updatable zero knowledge}. Here, the
+definitions slightly differ from the ones proposed by Groth et
+al.~\cite{C:GKMMM18} as their approach allowed the simulator to create and
+update the SRS on its own, while here we only assume that the simulator is given
+trapdoors for the generated SRS and updates.
+
+While an SRS is generated in an updatable manner, there is no single $\kgen$
+algorithm which outputs the string. Instead $\kgen$ compounds of a tuple of
+algorithms:
+$\algsetup, \algupdate, \algverifysrs, \algverifytd, \combinetd, \combineup$
+such that
+\begin{description}
+\item[$\algsetup$] takes a relation $\REL$ and outputs an SRS $\srs$, its
+  trapdoor $\td$, and proof that $\srs$ has been computed correctly $\rho$.
+\item[$\algupdate$] takes a relation $\REL$, SRS $\srs$, and sequence of
+  proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs a new updated
+  SRS $\srs'$, update trapdoor $\td$, and proof $\rho'$.
+\item[$\algverifysrs$] takes a relation $\REL$, SRS $\srs$ and sequence of
+  proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs $1$ if the
+  sequence and SRS are accepted, or $0$ if they are not.
+\item[$\combinetd$] takes all pieces of the trapdoor -- these stored in
+  $T$ and these provided by the SRS-updating party in its request and combine
+  them into a single trapdoor.
+\item[$\algverifytd$] takes the trapdoor output by $\combinetd$ and checks
+  whether it is correct given an SRS correctly verified by $\algverifysrs$. 
+\end{description}
+
+For the sake of practicality, we also require some commutative properties of
+trapdoors, SRSs and their updates. More precisely, we assume that there is an
+efficient algorithm $\combineup$ such that
+\begin{description}
+  \item[$\combineup$] takes a sequence of updates and outputs a
+single update equivalent to the sequence. More precisely 
+\begin{equation*}
+  \algupdate(\REL, \srs_n, (\rho)_{i = 1}^{n}; \prod_{i = 1}^n r_i) =
+  \combineup( \algupdate(\REL, \srs_1, (\rho_1); r_1), \ldots, \algupdate(\REL,
+  \srs_n, (\rho_n); r_n),
+\end{equation*}
+\end{description}
+
+% Similarly, the simulator is no longer a single algorithm but consists of
+% $\algsimsetup, \algsimupdate, \algsimprove$ such that
+ % \begin{description}
+ % \item[$\algsimsetup$]
+ % \item[$\algsimupdate$]
+ % \item[$\algsimprove$]
+ % \end{description}
+
+\begin{definition}[Updatable soundness~\cite{C:GKMMM18}]
+  Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
+  $\REL$. We say that $\ps$ is \emph{updatable knowledge sound} if for any
+  $\ppt$ adversary $\adv$, which is given oracle access to an updating oracle
+  $\oraclesrs$ as defined on \cref{fig:oraclesrs}, there exists an extractor
+  $\ext$ such that probability
+  \[
+    \Pr \left[
+        \begin{aligned}
+          \verifier(\REL, \srs, \inp, \zkproof) = 1, \\
+          \wit \gets \ext_\adv(\REL), \REL(\inp, \wit) = 0
+        \end{aligned}
+        \, \left| \,
+          \begin{aligned}
+            \srs \gets \bot \\
+            (\inp, \zkproof) \gets \adv^{\ro, \oraclesrs}(\REL)
+          \end{aligned}
+        \right.  \right] \leq \negl.
+    \]
+\end{definition}
+
+\begin{figure}[t]
+  	\centering
+		\fbox{
+		\procedure{$\oraclesrs(\intent, \srs_n, (\td_{j})_{j = 1}^m, (\rho_i)_{i = 1}^{n})$}		
+		{
+      \pcif \srs \neq \bot \pcthen \pcreturn 0 \\
+      \pcif \intent = \setup \pcthen \\
+      \pcind (\srs', \td', \rho') \sample \algsetup(\REL)\\
+      \pcind Q \gets Q \cup \smallset{\rho'}\\
+      \pcind T \gets (T, \td')\\
+      \pcind \pcreturn (\srs', \rho')\\
+      \pcif \intent = \update \pcthen\\
+      \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
+      \pcind b' \gets \algverifytd(\REL, \srs_n, \combinetd((T, (\td_j)_{j = 1}^m))\\
+      \pcind \pcif b = 0  \lor b' = 0 \pcthen \pcreturn 0 \\
+      \pcind (\srs', \td', \rho') \sample \algupdate(\REL, \srs_n, (\rho)_{i =
+        1}^n)
+      \\
+      \pcind Q \gets Q \cup \smallset{\rho'}\\
+      \pcind T \gets (T, (\td_{j})_{j = 1}^m, \td')\\
+      \pcind \pcreturn (\srs', \rho') \\
+      \pcif \intent = \final \\
+      \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
+      \pcind T \gets (T, (\td_{j})_{j = 1}^m)\\
+      \pcind \td \gets \combinetd(T)\\
+      \pcind b' \gets \algverifytd(\REL, \srs_n, \td)\\
+      \pcind \pcif b = 0 \lor b' = 0 \lor Q \cap \smallset{\rho_i}_i = \emptyset
+      \pcthen \pcreturn
+      0 \\
+      \pcind \srs \gets \srs_n\\
+      %\pcind \td \gets \combinetd(T)\\
+      \pcind \pcreturn (\srs, \td)\\
+      \pcelse \pcreturn 0
+    }}
+  \caption{SRS updates oracle}
+  \label{fig:oraclesrs}
+\end{figure}
+  
+  \begin{definition}[Updatable zero knowledge~\cite{C:GKMMM18}]
+    Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
+    $\REL$. We say that $\ps$ is \emph{updatable zero knowledge knowledge} if
+    for any adversary $\adv$, which is given oracle access to an updating oracle
+    $\oraclesrs$ (as defined on \cref{fig:oraclesrs}) and proving oracle
+    $\oracleo_b$, holds $\abs{\eps_0(\secpar) - \eps_1(\secpar)} \leq \negl$, and
+    \[
+      \eps_b = \Pr \left[
+        \begin{aligned}
+          \adv^{\oracleo_b, \oraclesrs}(\REL) = 1
+        \end{aligned}
+        \, \left| \,
+          \begin{aligned}
+            % \algsetup \gets \algsimsetup \\
+            % \algupdate \gets \algsimupdate\\
+            \srs \gets \bot, \td \gets \bot \\
+            Q \gets \emptyset, T \gets \emptyset
+        \end{aligned}
+      \right.  \right].
+  \]
+% and
+%   \[
+%       \eps_1 = \Pr
+%       \left[
+%         \begin{aligned}
+%           \adv^{\oracleo_1, \oraclesrs}(\REL) = 1
+%         \end{aligned}
+%         \, \left| \,
+%           \begin{aligned}
+%             \srs \gets \bot, \td \gets \bot \\
+%             Q \gets \emptyset, T \gets \emptyset
+%           \end{aligned}
+%         \right.
+%         \right]
+%       \]
+  The oracle $\oracleo_b$ on input $(\inp, \wit)$ returns
+  $\zkproof = \simulator(\REL, \srs, \td, \inp)$ if $b = 0$, and
+  $\zkproof = \prover(\REL, \srs, \inp, \wit)$ if $b = 1$.
+\end{definition}
+
+Since we focus on a special flavour of soundness -- computational special
+soundness -- we shall define how SRS-updatability affects it and coin
+\emph{updatable computational special soundness}.
+
+\begin{definition}[Updatable computational special soundness]
+  Let $\proofsystem = (\kgen, \prover, \verifier, \simulator)$ be an
+  $(2 \mu + 1)$-message proof system for a relation $\REL$. We say that
+  $\proofsystem$ is $(\epsss, (n_1, \ldots, n_\mu))$-\emph{updatable
+    computationally special sound} if there exists an extractor $\extt$ that
+  given an $(n_1, \ldots, n_\mu)$-tree of acceptable transcripts $\tree$ and
+  instance $\inp$ output by some $\ppt$ adversary $\adv(\REL)$ that is given
+  oracle access to $\oraclesrs$, outputs $\wit$ such that $\REL(\inp, \wit) = 1$
+  with probability at least $1 - \epsss$.
+\end{definition}
+
+\begin{lemma}[One-time updatable computational special soundness implies
+  updatable computational special soundness.]
+\end{lemma}
+\begin{proof}
+\end{proof}
+
+Given updatable soundness and subversion zero-knowledge defined, we are ready to
+define updatable special simulation extractability
+\begin{definition}[Updatable special simulation extractability (USSE)]
+  \label{def:upsimext}
+    Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a computationally
+    special-sound HVZK proof and
+    $\ps_\fs = (\kgen_\fs, \prover_\fs, \verifier_\fs, \simulator_\fs)$ be $\ps$
+    transformed by the Fiat--Shamir transform. Let $\simulator_{\fs}$ be a
+    simulator providing simulated proofs for correct statements, $\oraclesrs$ be
+    the SRS update oracle (cf.~\cref{fig:oraclesrs}) and $\ro$ be a random
+    oracle.  Let $\adv$ be a $\ppt$ adversary that is given oracle access to
+    $\simulator_\fs$, $\ro$, and $\oraclesrs$, such that $\ro$ and $\oraclesrs$
+    are simulated for $\adv$ by $\simulator_\fs$.  We say that $\ps_\fs$ is
+    \emph{updatable special simulation-extractable} with \emph{extraction error}
+    $\nu$ if for any such $\adv$ which produces an accepting transcript of $\ps$
+    with probability $\accProb$, i.e.~
+    	\[
+		\accProb = \Pr \left[
+		\begin{aligned}
+			& \verifier_\fs(\REL, \srs, \inp_{\advse}, \zkproof_{\advse}) = 1,\\
+			& (\inp_{\advse}, \zkproof_{\advse}) \not\in Q
+		\end{aligned}
+		\, \left| \,
+		\begin{aligned}
+			& r \sample \RND{\advse}, \\
+			& (\inp_{\advse}, \zkproof_{\advse}) \gets \advse^{\simulator_\fs, \ro,
+        \oraclesrs} (\REL; r)
+		\end{aligned}
+		\right.\right]\,,
+	\]
+	probability
+	\[
+		\frkProb = \Pr \left[
+		\begin{aligned}
+			& \verifier_\fs(\REL, \srs, \inp_{\advse}, \zkproof_{\advse}) = 1,\\
+			& (\inp_{\advse}, \zkproof_{\advse}) \not\in Q,\\
+			& \REL(\inp_{\advse}, \wit_{\advse}) = 1
+		\end{aligned}
+		\, \left| \,
+		\begin{aligned}
+			& r \sample \RND{\advse},\\
+			& (\inp_{\advse}, \zkproof_{\advse}) \gets \advse^{\simulator_\fs,
+        \ro,\oraclesrs} (\REL; r) \\
+			& \wit_{\advse} \gets \ext_\se (\REL, \srs, \advse, r, \inp_{\advse},
+      \zkproof_{\advse}, Q, Q_\ro,)
+		\end{aligned}
+		\right.\right]
+	\]
+	is at at least 
+	\[
+		\frkProb \geq \frac{1}{\poly} (\accProb - \nu)^d - \eps(\secpar)\,,
+	\]
+	for some polynomial $\poly$, constant $d$ and negligible $\eps$ whenever
+  $\accProb \geq \nu$. List $Q$ contains all $(\inp, \zkproof)$ pairs where
+  $\inp$ is an instance provided to the simulator by the adversary and
+  $\zkproof$ is the simulator's answer. List $Q_\ro$ contains all $\advse$'s
+  queries to $\ro$ and $\ro$'s answers.
+\end{definition}
+
+Groth et al.~\cite[Lemma 6]{C:GKMMM18} shown that to assure updatable (knowledge)
+soundness of some proof system it is enough to show that it remains (knowledge)
+sound if the adversary is allowed to make a single update. Here we show an
+equivalent result, stating that to show updatable special simulation extractability it is
+enough to show that this property holds if the adversary can make a single
+update as well. 
+\begin{lemma}[Single adversarial update implies full special updatable
+  special simulation extractability.]
+  Let $\ps$ be a proof system that is SSE against adversaries who can query
+  $\oraclesrs$ on $(\setup, \bot, \bot, \bot)$ only once and then on
+  $(\final, \srs_n, (\td_j)_{j = 1}^m, (\rho_i)_{i = 1}^n)$ for
+  $m \leq m \leq 2$. Then $\ps$ is SSE against adversaries who can make
+  polynomially many calls to $\oraclesrs$. That is, there exists an extractor
+  $\ext_\adv$ that outputs a corresponding witness with probability at least
+  $\frkProb_\adv \geq \infrac{(\accProb_\adv - \nu)^d}{\poly} - \eps(\secpar)$
+  for $\accProb_\adv$ being a probability that a USSE adversary $\adv$ outputs
+  an acceptable proof and $\nu$ being the extraction error.
+\end{lemma}
+\begin{proof}
+  % \michals{12.05}{Write down properties for the SRS updates -- that they can be
+  %   combined etc.}
+  Similarly to \cite{C:GKMMM18} we assume that $\ps$ is secure against
+  advresaries who could perform a single update and build a SSE single-update
+  adversary $\bdv$ which outputs an acceptable proof with probability
+  $\accProb_\bdv$. By the assumption, there exists an extractor $\ext_\bdv$ who
+  from a tree of transcripts obtained from $\bdv$ with probability at least
+  $\frkProb_\bdv$. We show how $\bdv$ and its extractor can be used to extract
+  the witness from a proof provided by some USSE adversary $\adv$ which produces
+  an acceptable proof with probability $\accProb_\adv$.  The adversary $\bdv$
+  proceeds as follows:
+  \begin{itemize}
+  \item Run $(\setup, \bot, \bot, \bot)$ and obtain SRS $\srs_s$ and proof
+    $\rho_s$.
+  \item On $\adv$'s queries to the random oracle, pass the queries to the
+    random oracle and send back the answers.
+  \item On $\adv$'s queries to $\oraclesrs$, let $k$ be the index of $\adv$'s
+    query to $\oraclesrs$.
+    \begin{description}
+    \item [$(\setup, \bot, \bot, \bot)$:] Pick randomness $r_k$ and internally
+      run $(\srs', \td', \rho') \gets \algsetup(\REL; r_k)$;
+    \item [$(\update, \srs_{k}, (\td_j)_{j = 1}^{m_k}, (\rho_i)_{i = 1}^{k})$:] Pick
+      randomness $r_k$ and run $\algverifysrs(\REL, \srs_{k}, (\rho_i)_{i = 1}^{k})$
+      return $0$ if the verification fails. Otherwise, internally run
+      $(\srs', \td', \rho') \gets \algupdate(\REL, \srs_{k}, (\rho_i)_{i = 1}^{k};
+      r_k)$.
+    \item [$(\final, \srs_{n}, (\td_j)_{j = 1}^{m_n}, (\rho_i)_{i = 1}^{n})$:]
+      ($n$ is the index of the last $\adv$'s query to
+      $\oraclesrs$.)%Let $n$ be the number of updates requested by $\adv$,
+      \begin{itemize}
+      \item Combine the updates requested by $\adv$ into a single update,
+        i.e.~run $\algupdate(\REL, \srs_s, \rho_s; \prod_{k = 1}^n r_k)$ and
+        get $(\srs_u, \rho_u)$. 
+      \item Call the real oracle $\oraclesrs$ on $(\final, \srs_u, \smallset{\rho_s,
+        \rho_u})$. By the construction $\srs_u = \srs_n$. That is, the SRS finalized
+      by the adversary $\adv$ is the same as the SRS finalized by $\bdv$.
+      \end{itemize}
+    \end{description}
+  \item On $\adv$'s queries to the simulator,
+    \begin{itemize}
+    \item if the SRS has been set (i.e.~$\adv$ called $\final$), pass the queries to the simulator $\simulator_\fs$;
+    \item if the SRS has not been set yet: Denote by $\srs_k$ the current SRS,
+      since all SRS updates were performed internally by $\bdv$, it knows
+      trapdoor $\td_k$ corresponding to $\srs_k$ and thus is able to provide
+      $\adv$ with the simulated proofs for the instances it requests.   
+      % \michals{11.05}{Problem, since $\bdv$
+      % run $\setup$, he may not know the whole trapdoor at this point.}
+    \end{itemize}
+  \end{itemize}
+
+  Eventually, the SRS is set and $\adv$ returns an instance $\inp$ and its proof
+  $\zkproof$. The same instance and proof are returned by $\bdv$. Note,
+  probability that $\bdv$ outputs an acceptable proof equals probability that
+  $\adv$ does, i.e.~$\accProb_\bdv = \accProb_\adv$. Furthermore, from the lemma's
+  assumptions there exists and extractor $\ext_\bdv$ which given oracle access
+  to $\bdv$ reveals the corresponding witness with probability $\frkProb_\bdv
+  \geq \infrac{(\accProb_\bdv - \nu)^d}{\poly} - \eps(\secpar)$, hence
+  \[
+    \frkProb_\adv \geq \infrac{(\accProb_\adv - \nu)^d}{\poly} - \eps(\secpar)\,.
+  \]
+  \qed
+\end{proof}
+
+\color{black}
+%}
 
 \section{Special simulation-extractability---the general result}
 Equipped with definitional framework of \cref{sec:se_definitions} we are ready
