@@ -1582,7 +1582,8 @@ single update equivalent to the sequence. More precisely
  % \item[$\algsimprove$]
  % \end{description}
 
-\begin{definition}[Updatable soundness~\cite{C:GKMMM18}]
+\begin{definition}[Updatable soundness (US)~\cite{C:GKMMM18}]
+  \label{def:us}
   Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
   $\REL$. We say that $\ps$ is \emph{updatable knowledge sound} if for any
   $\ppt$ adversary $\adv$, which is given oracle access to an updating oracle
@@ -1640,13 +1641,18 @@ single update equivalent to the sequence. More precisely
   \caption{SRS updates oracle}
   \label{fig:oraclesrs}
 \end{figure}
+
+If $\ps$ from \cref{def:us} is secure against adversaries who are limited to a
+single call $\setup$ and a single call $\final$, then $\ps$ is called
+\emph{one-time updatable sound} (otUS).
   
   \begin{definition}[Updatable zero knowledge~\cite{C:GKMMM18}]
     Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a proof system for
     $\REL$. We say that $\ps$ is \emph{updatable zero knowledge knowledge} if
     for any adversary $\adv$, which is given oracle access to an updating oracle
     $\oraclesrs$ (as defined on \cref{fig:oraclesrs}) and proving oracle
-    $\oracleo_b$, holds $\abs{\eps_0(\secpar) - \eps_1(\secpar)} \leq \negl$, and
+    $\oracleo_b$, holds $\abs{\eps_0(\secpar) - \eps_1(\secpar)} \leq \negl$,
+    and
     \[
       \eps_b = \Pr \left[
         \begin{aligned}
@@ -1685,7 +1691,8 @@ Since we focus on a special flavour of soundness -- computational special
 soundness -- we shall define how SRS-updatability affects it and coin
 \emph{updatable computational special soundness}.
 
-\begin{definition}[Updatable computational special soundness]
+\begin{definition}[Updatable computational special soundness (UCSS)]
+  \label{def:ucss}
   Let $\proofsystem = (\kgen, \prover, \verifier, \simulator)$ be an
   $(2 \mu + 1)$-message proof system for a relation $\REL$. We say that
   $\proofsystem$ is $(\epsss, (n_1, \ldots, n_\mu))$-\emph{updatable
@@ -1695,9 +1702,24 @@ soundness -- we shall define how SRS-updatability affects it and coin
   oracle access to $\oraclesrs$, outputs $\wit$ such that $\REL(\inp, \wit) = 1$
   with probability at least $1 - \epsss$.
 \end{definition}
+Similarly to otUS proof systems, if $\ps$ from \cref{def:ucss} is secure agains
+adversaries that are limited to a single call to $\oraclesrs$ with intent
+$\setup$ and a single call with intent $\final$, then we call $\ps$ one-time
+computational special sound (otUCSS).
+
+Groth et al.~\cite[Lemma 6]{C:GKMMM18} shown that to assure updatable
+(knowledge) soundness of some proof system it is enough to show that it remains
+(knowledge) sound if the adversary is allowed to make a single update. Here we
+show a similar result, stating that to show updatable computational special
+soundness it is enough to show that this property holds if the adversary can
+make an update only once.
 
 \begin{lemma}[One-time updatable computational special soundness (otUCSS) implies
   updatable computational special soundness (UCSS).]
+  \label{lem:otucss_to_ucss}
+  Let $\ps$ be an $(2 \mu + 1)$-message proof system for a relation $\REL$ that
+  is $(\epsss, (n_1, \ldots, n_\mu))$-one-time updatable computationally
+    special sound. Then $\ps$ is also updatable computationally special sound.
 \end{lemma}
 \begin{proof}
   Similarly to \cite{C:GKMMM18} we assume that $\ps$ is secure against otUCSS
@@ -1805,12 +1827,6 @@ define updatable special simulation extractability
   queries to $\ro$ and $\ro$'s answers.
 \end{definition}
 
-Groth et al.~\cite[Lemma 6]{C:GKMMM18} shown that to assure updatable (knowledge)
-soundness of some proof system it is enough to show that it remains (knowledge)
-sound if the adversary is allowed to make a single update. Here we show an
-equivalent result, stating that to show updatable special simulation extractability it is
-enough to show that this property holds if the adversary can make a single
-update as well. 
 \begin{lemma}[Single adversarial update implies full special updatable
   special simulation extractability.]
   Let $\ps$ be a proof system that is SSE against adversaries who can query
@@ -1826,16 +1842,15 @@ update as well.
 \begin{proof}
   % \michals{12.05}{Write down properties for the SRS updates -- that they can be
   %   combined etc.}
-  Similarly to \cite{C:GKMMM18} we assume that $\ps$ is secure against
-  adversaries who could perform a single update and build a SSE single-update
-  adversary $\bdv$ which outputs an acceptable proof with probability
-  $\accProb_\bdv$ and internally simulates an USSE adversary $\adv$. By the
-  assumption, there exists an extractor $\ext_\bdv$ who from a tree of
-  transcripts obtained from $\bdv$ with probability at least $\frkProb_\bdv$. We
-  show how $\bdv$ and its extractor can be used to extract the witness from a
-  proof provided by $\adv$ which produces an acceptable
-  proof with probability $\accProb_\adv$.  The adversary $\bdv$ proceeds as
-  follows:
+  Similarly to \cite{C:GKMMM18} and \cref{lem:otucss_to_ucss} we assume that
+  $\ps$ is secure against adversaries who could perform a single update and
+  build a SSE single-update adversary $\bdv$ which outputs an acceptable proof
+  with probability $\accProb_\bdv$ and internally simulates an USSE adversary
+  $\adv$. By the assumption, there exists an extractor $\ext_\bdv$ who from a
+  tree of transcripts obtained from $\bdv$ with probability at least
+  $\frkProb_\bdv$. We show how $\bdv$ and its extractor can be used to extract
+  the witness from a proof provided by $\adv$ which produces an acceptable proof
+  with probability $\accProb_\adv$.  The adversary $\bdv$ proceeds as follows:
   \begin{itemize}
   \item Run $(\setup, \bot, \bot, \bot)$ and obtain SRS $\srs_s$ and proof
     $\rho_s$.
