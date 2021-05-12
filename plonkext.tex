@@ -1696,10 +1696,54 @@ soundness -- we shall define how SRS-updatability affects it and coin
   with probability at least $1 - \epsss$.
 \end{definition}
 
-\begin{lemma}[One-time updatable computational special soundness implies
-  updatable computational special soundness.]
+\begin{lemma}[One-time updatable computational special soundness (otUCSS) implies
+  updatable computational special soundness (UCSS).]
 \end{lemma}
 \begin{proof}
+  Similarly to \cite{C:GKMMM18} we assume that $\ps$ is secure against otUCSS
+  adversaries who could perform a single update and build an otUCSS $\bdv$ which
+  internally simulates a UCSS adversary $\adv$. By the assumption, there exists
+  an extractor $\extt$ which outputs a witness $\wit$ from a tree of
+  transcripts $\tree$ for a statement $\inp$. We show how $\bdv$ and $\ext$
+  can be used to build an extractor $\extt'$ that extracts the witness from a
+  tree of transcripts built by $\adv$. The adversary $\bdv$ proceeds as follows:
+  \begin{itemize}
+  \item Run $(\setup, \bot, \bot, \bot)$ and obtain SRS $\srs_s$ and proof
+    $\rho_s$.
+  \item On $\adv$'s queries to $\oraclesrs$, let $k$ be the index of $\adv$'s
+    query to $\oraclesrs$.
+    \begin{description}
+    \item [$(\setup, \bot, \bot, \bot)$:] Pick randomness $r_k$ and internally
+      run $(\srs', \td', \rho') \gets \algsetup(\REL; r_k)$;
+    \item [$(\update, \srs_{k}, (\td_j)_{j = 1}^{m_k}, (\rho_i)_{i = 1}^{k})$:]
+      Pick randomness $r_k$ and run
+      $\algverifysrs(\REL, \srs_{k}, (\rho_i)_{i = 1}^{k})$ return $0$ if the
+      verification fails. Otherwise, internally run
+      $(\srs', \td', \rho') \gets \algupdate(\REL, \srs_{k}, (\rho_i)_{i =
+        1}^{k}; r_k)$.
+    \item [$(\final, \srs_{n}, (\td_j)_{j = 1}^{m_n}, (\rho_i)_{i = 1}^{n})$:]
+      ($n$ is the index of the last $\adv$'s query to
+      $\oraclesrs$.
+      \begin{itemize}
+      \item Combine the updates requested by $\adv$ into a single update,
+        i.e.~run $\algupdate(\REL, \srs_s, \rho_s; \prod_{k = 1}^n r_k)$ and get
+        $(\srs_u, \rho_u)$.
+      \item Call the real oracle $\oraclesrs$ on
+        $(\final, \srs_u, \smallset{\rho_s, \rho_u})$. By the construction
+        $\srs_u = \srs_n$. That is, the SRS finalized by the adversary $\adv$ is
+        the same as the SRS finalized by $\bdv$.
+      \end{itemize}
+    \end{description}
+  \end{itemize}
+
+  Eventually, the SRS is set and $\adv$ returns an instance $\inp$ and a
+  $(n_1, \ldots, n_\mu)$-tree of acceptable transcripts $\tree$. The same
+  instance and tree are returned by $\bdv$. From the lemma's assumptions there
+  $\extt$ that given $\tree$ outputs the witness corresponding to $\inp$ with
+  probability at least $(1 - \epsss)$. Let $\extt'$ be an extractor that
+  \michals{12.05}{Issue -- ordering of quantifiers -- the extractor should work
+    for all UCSS adversaries, does it? or it works only for $\adv$?}
+  \qed
 \end{proof}
 
 Given updatable soundness and subversion zero-knowledge defined, we are ready to
@@ -1783,14 +1827,15 @@ update as well.
   % \michals{12.05}{Write down properties for the SRS updates -- that they can be
   %   combined etc.}
   Similarly to \cite{C:GKMMM18} we assume that $\ps$ is secure against
-  advresaries who could perform a single update and build a SSE single-update
+  adversaries who could perform a single update and build a SSE single-update
   adversary $\bdv$ which outputs an acceptable proof with probability
-  $\accProb_\bdv$. By the assumption, there exists an extractor $\ext_\bdv$ who
-  from a tree of transcripts obtained from $\bdv$ with probability at least
-  $\frkProb_\bdv$. We show how $\bdv$ and its extractor can be used to extract
-  the witness from a proof provided by some USSE adversary $\adv$ which produces
-  an acceptable proof with probability $\accProb_\adv$.  The adversary $\bdv$
-  proceeds as follows:
+  $\accProb_\bdv$ and internally simulates an USSE adversary $\adv$. By the
+  assumption, there exists an extractor $\ext_\bdv$ who from a tree of
+  transcripts obtained from $\bdv$ with probability at least $\frkProb_\bdv$. We
+  show how $\bdv$ and its extractor can be used to extract the witness from a
+  proof provided by $\adv$ which produces an acceptable
+  proof with probability $\accProb_\adv$.  The adversary $\bdv$ proceeds as
+  follows:
   \begin{itemize}
   \item Run $(\setup, \bot, \bot, \bot)$ and obtain SRS $\srs_s$ and proof
     $\rho_s$.
