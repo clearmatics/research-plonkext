@@ -216,14 +216,24 @@ precisely, the extractor is not guaranteed to succeed if the adversary outputs
 an acceptable proof with probability $\accProb$ smaller than knowledge error
 $\nu$. On the other hand, we show that this $\nu$ can be arbitrarily small, even
 negligible. However, for $\accProb$ close to $\nu$ the extractor becomes fairly
-inefficient. On the other hand, the extractor considered in this paper is
-black-box as it only needs an oracle access to the adversary. Importantly, it
-does not depend on any knowledge assumption.  (However, it also depends on a
-number of properties required from the protocol. In case of $\plonk$ and
-$\sonic$, these properties are often proven in the AGM.) We also note that when
-an extractor depends on rewinding the adversary, it is expected to have
-extractor's success probability dependent on the adversary's probability of
-returning a valid proof.
+inefficient. Since the extractor utilizes special soundness of the protocol, we
+call our flavour of simulation extractability \emph{special}. This is also to
+avoid confusion with weakly simulation extractable protocols, which provide
+simulation extractability given that the adversary cannot output a proof for a
+statement it saw a simulated proof for. Importantly, weakly simulation
+extractable are (often) re-randomizable. (Since we do not consider other notions
+of simulation extractability than special, we sometimes omit that adjective and
+write ``simulation extractability'')
+
+Furthermore, Faust et al.'s extractor is not fully black-box as it needs to run
+the adversary multiple times on different random oracles. On the other hand, the
+extractor is not white-box either as it only requires oracle access to the
+adversary and does not depend on the adversary's code. Moreover, it does not
+depend on any knowledge assumption.  (However, it also depends on a number of
+properties required from the protocol. In case of $\plonk$ and $\sonic$, these
+properties are often proven in the AGM.) We also note that when an extractor
+depends on rewinding the adversary, it is expected to have extractor's success
+probability dependent on the adversary's probability of returning a valid proof.
 
 To show that our result is useful and practical we prove that two of the most
 efficient updatable and universal zkSNARKs---$\plonk$ and $\sonic$---are
@@ -233,9 +243,6 @@ these multi-round computationally sound protocols and their building blocks:
 computational special soundness, generalized unique response, and a generalized
 forking lemma. These conceptual insights into interactive SNARK systems help us
 overcome a number of challenges, as we explain below.
-
-\comment{
-}
 
 \subsection{Our techniques}
 
@@ -337,10 +344,10 @@ soundness is proven. That is the case for $\sonic$, whose security proof relies
 on so-called witness-extended emulation. Authors of $\plonk$ worked around this
 problem by showing their protocol security directly in the algebraic group model.
 
-\subsubsection{Towards simulation-extractability.} Given our modified, less
+\subsubsection{Towards special simulation-extractability.} Given our modified, less
 restrictive, definition for special-soundness and the unique response property,
 and our generalised forking lemma we are able to show the announced
-result---simulation extractability of $\plonkprotfs$ and $\sonicprotfs$. The
+result---special simulation extractability of $\plonkprotfs$ and $\sonicprotfs$. The
 proof is inspired by simulation-extractability and simulation-soundness proofs
 from \cite{INDOCRYPT:FKMV12}, with major modifications, which were required as
 \cite{INDOCRYPT:FKMV12} considers only $\Sigma$-protocols
@@ -414,7 +421,7 @@ new notions and theorems that instantiate our framework. Then, in Section 4, we
 show our main result, that is a proof of simulation-soundness for a class of
 zero-knowledge proofs of knowledge. In Section 5 and \cref{sec:sonic} we show
 that $\plonk$ and $\sonic$ fulfil requirements of our framework and in fact is
-simulation extractable.1
+special simulation extractable.
 
 
 
@@ -509,6 +516,10 @@ description of $\REL$ one learns security parameter $\secpar$ and other
 necessary information like public parameters $\pp$ containing description of a
 group $\GRP$, if the relation is a relation of group elements (as it usually is
 in case of zkSNARKs).
+
+Let $\pcalgostyle{Algorithm}$ be an algorithm that (on some input $input$)
+returns a $k$-piece output $(out_0, \ldots, out_{k - 1})$. We write
+$\pcalgostyle{Algorithm}(input)[i]$ to denote $out_i$.
 
 \paragraph{Bilinear groups.}
 A bilinear group generator $\pgen (\secparam)$ returns public parameters $ \pp =
@@ -862,7 +873,7 @@ We say that $\PCOM$ has the unique opening property if the following holds:
 \end{description}
 Intuitively, opening uniqueness assures that there is only one valid opening
 for the committed polynomial and given evaluation point. This property is
-crucial in showing simulation-extractability of $\plonk$ and $\sonic$. We show
+crucial in showing special simulation-extractability of $\plonk$ and $\sonic$. We show
 that the $\plonk$'s and $\sonic$'s polynomial commitment schemes satisfy this
 requirement in \cref{lem:pcomp_unique_op} and \cref{lem:pcoms_unique_op}
 respectively.
@@ -1125,7 +1136,7 @@ be a proof system such that
 Fiat--Shamir heuristic states that $\proofsystem_\fs$ is zero-knowledge
 non-interactive proof system for $\REL \in \RELGEN(\secparam)$.
 
-\subsection{Simulation extractable NIZKs}
+\subsection{Special simulation extractable NIZKs}
 Real life applications often require from a NIZK proof system to be
 non-malleable. That is, no adversary seeing a proof $\zkproof$ for a statement
 $\inp$ should be able to provide a new proof $\zkproof'$ related to $\zkproof$.
@@ -1134,13 +1145,13 @@ which assures that no adversary can produce a valid proof without knowing the
 corresponding witness. This must hold even if the adversary is allowed to see
 polynomially many simulated proofs for any statements it wishes.
 
-\begin{definition}[Simulation-extractable NIZK, \cite{INDOCRYPT:FKMV12}]
+\begin{definition}[Special simulation-extractable NIZK, \cite{INDOCRYPT:FKMV12}]
 	\label{def:simext}
 	Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a computationally
   special-sound HVZK proof and
   $\ps_\fs = (\kgen_\fs, \prover_\fs, \verifier_\fs, \simulator_\fs)$ be $\ps$
   transformed by the Fiat--Shamir transform. We say that $\ps_\fs$ is
-  \emph{simulation-extractable} with \emph{extraction error} $\nu$ if for any
+  \emph{special simulation-extractable} with \emph{extraction error} $\nu$ if for any
   $\ppt$ adversary $\adv$ that is given oracle access to a random oracle $\ro$
   and simulator $\simulator_\fs$, and produces an accepting transcript of $\ps$
   with probability $\accProb$, that is
@@ -1192,7 +1203,7 @@ Consider a sigma protocol $\sigmaprot = (\prover, \verifier, \simulator)$ that
 is specially sound and has a unique response property. Let $\sigmaprot_\fs =
 (\prover_\fs, \verifier_\fs, \simulator_\fs)$ be a NIZK obtained by applying the
 Fiat--Shamir transform to $\sigmaprot$. Faust et al.~\cite{INDOCRYPT:FKMV12}
-show that every such $\sigmaprot_\fs$ is simulation-extractable. This result is
+show that every such $\sigmaprot_\fs$ is special simulation-extractable. This result is
 presented in \cref{sec:forking_lemma} along with the instrumental forking lemma,
 cf.~\cite{CCS:BelNev06}.
 \end{remark}
@@ -1201,7 +1212,7 @@ cf.~\cite{CCS:BelNev06}.
 \color{blueish}
 \section{Simulation extraction meets SRS updatability}
 
-We propose a new notion of \emph{updatable simulation extractability} which
+We propose a new notion of \emph{updatable special simulation extractability} which
 assures that the proof system is secure even when an adversary is allowed to
 update the SRS \emph{and} get simulated proofs for the statements it
 requires. Before we define the aforementioned notion we recall definitions of
@@ -1213,22 +1224,37 @@ trapdoors for the generated SRS and updates.
 
 While an SRS is generated in an updatable manner, there is no single $\kgen$
 algorithm which outputs the string. Instead $\kgen$ compounds of a tuple of
-algorithms: $\algsetup, \algupdate, \algverifysrs$ such that
+algorithms:
+$\algsetup, \algupdate, \algverifysrs, \algverifytd, \combinetd, \combineup$
+such that
 \begin{description}
-\item[$\algsetup$] which takes a relation $\REL$ and outputs an SRS $\srs$, its
+\item[$\algsetup$] takes a relation $\REL$ and outputs an SRS $\srs$, its
   trapdoor $\td$, and proof that $\srs$ has been computed correctly $\rho$.
-\item[$\algupdate$] which takes a relation $\REL$, SRS $\srs$ and sequence of
+\item[$\algupdate$] takes a relation $\REL$, SRS $\srs$, and sequence of
   proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs a new updated
   SRS $\srs'$, update trapdoor $\td$, and proof $\rho'$.
-\item[$\algverifysrs$] which takes a relation $\REL$, SRS $\srs$ and sequence of
+\item[$\algverifysrs$] takes a relation $\REL$, SRS $\srs$ and sequence of
   proofs of updates' correctness $(\rho_i)_{i = 1}^n$ and outputs $1$ if the
   sequence and SRS are accepted, or $0$ if they are not.
+\item[$\combinetd$] takes all pieces of the trapdoor -- these stored in
+  $T$ and these provided by the SRS-updating party in its request and combine
+  them into a single trapdoor.
+\item[$\algverifytd$] takes the trapdoor output by $\combinetd$ and checks
+  whether it is correct given an SRS correctly verified by $\algverifysrs$. 
 \end{description}
 
-For the sake of simulatability we also define an algorithm $\combinetd$ which
-takes trapdoor and updates' trapdoors and combine them into a single final
-trapdoor $\td$, cf.~\cref{fig:oraclesrs}.
-
+For the sake of practicality, we also require some commutative properties of
+trapdoors, SRSs and their updates. More precisely, we assume that there is an
+efficient algorithm $\combineup$ such that
+\begin{description}
+  \item[$\combineup$] takes a sequence of updates and outputs a
+single update equivalent to the sequence. More precisely 
+\begin{equation*}
+  \algupdate(\REL, \srs_n, (\rho)_{i = 1}^{n}; \prod_{i = 1}^n r_i) =
+  \combineup( \algupdate(\REL, \srs_1, (\rho_1); r_1), \ldots, \algupdate(\REL,
+  \srs_n, (\rho_n); r_n),
+\end{equation*}
+\end{description}
 
 % Similarly, the simulator is no longer a single algorithm but consists of
 % $\algsimsetup, \algsimupdate, \algsimprove$ such that
@@ -1272,8 +1298,8 @@ trapdoor $\td$, cf.~\cref{fig:oraclesrs}.
       \pcind \pcreturn (\srs', \rho')\\
       \pcif \intent = \update \pcthen\\
       \pcind b \gets \algverifysrs(\REL, \srs_n, (\rho_i)_{i = 1}^n)\\
-      %\pcind b' \gets \algverifytd(\REL, \srs_n, \td_n)\\
-      \pcind \pcif b = 0  \pcthen \pcreturn 0 \\
+      \pcind b' \gets \algverifytd(\REL, \srs_n, \combinetd((T, (\td_j)_{j = 1}^m))\\
+      \pcind \pcif b = 0  \lor b' = 0 \pcthen \pcreturn 0 \\
       \pcind (\srs', \td', \rho') \sample \algupdate(\REL, \srs_n, (\rho)_{i =
         1}^n)
       \\
@@ -1337,9 +1363,9 @@ trapdoor $\td$, cf.~\cref{fig:oraclesrs}.
       \prover(\REL, \srs, \inp, \wit)$ if $b = 1$.
   \end{definition}
   
-  Given updatable soundness and subversion zero-knowledge defined, we are ready to define updatable simulation
-  extractability
-  \begin{definition}[Updatable Special simulation extractability (USSE)]
+  Given updatable soundness and subversion zero-knowledge defined, we are ready
+  to define updatable special simulation extractability
+  \begin{definition}[Updatable special simulation extractability (USSE)]
     \label{def:upsimext}
     Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be a computationally
     special-sound HVZK proof and
@@ -1350,7 +1376,7 @@ trapdoor $\td$, cf.~\cref{fig:oraclesrs}.
     Let $\adv$ be a $\ppt$ adversary that is given oracle access to
     $\simulator_\fs$, $\ro$, and $\oraclesrs$, such that $\ro$ and $\oraclesrs$
     are simulated for $\adv$ by $\simulator_\fs$.  We say that $\ps_\fs$ is
-    \emph{updatable simulation-extractable} with \emph{extraction error} $\nu$
+    \emph{updatable special simulation-extractable} with \emph{extraction error} $\nu$
     if for any such $\adv$ which produces an accepting transcript of $\ps$ with
     probability $\accProb$, i.e.~
     	\[
@@ -1399,27 +1425,33 @@ trapdoor $\td$, cf.~\cref{fig:oraclesrs}.
 Groth et al.~\cite[Lemma 6]{C:GKMMM18} shown that to assure updatable (knowledge)
 soundness of some proof system it is enough to show that it remains (knowledge)
 sound if the adversary is allowed to make a single update. Here we show an
-equivalent result, stating that to show updatable simulation extractability it is
+equivalent result, stating that to show updatable special simulation extractability it is
 enough to show that this property holds if the adversary can make a single
 update as well. 
 \begin{lemma}[Single adversarial update implies full special updatable
-  simulation extractability.]
+  special simulation extractability.]
   Let $\ps$ be a proof system that is SSE against adversaries who can query
-  $\oraclesrs$ on $(\setup, \bot, \bot, bot)$ only once and then on
+  $\oraclesrs$ on $(\setup, \bot, \bot, \bot)$ only once and then on
   $(\final, \srs_n, (\td_j)_{j = 1}^m, (\rho_i)_{i = 1}^n)$ for
   $m \leq m \leq 2$. Then $\ps$ is SSE against adversaries who can make
-  polynomially many calls to $\oraclesrs$.
+  polynomially many calls to $\oraclesrs$. That is, there exists an extractor
+  $\ext_\adv$ that outputs a corresponding witness with probability at least
+  $\frkProb_\adv \geq \infrac{(\accProb_\adv - \nu)^d}{\poly} - \eps(\secpar)$
+  for $\accProb_\adv$ being a probability that a USSE adversary $\adv$ outputs
+  an acceptable proof and $\nu$ being the extraction error.
 \end{lemma}
 \begin{proof}
+  % \michals{12.05}{Write down properties for the SRS updates -- that they can be
+  %   combined etc.}
   Similarly to \cite{C:GKMMM18} we assume that $\ps$ is secure against
   advresaries who could perform a single update and build a SSE single-update
   adversary $\bdv$ which outputs an acceptable proof with probability
   $\accProb_\bdv$. By the assumption, there exists an extractor $\ext_\bdv$ who
   from a tree of transcripts obtained from $\bdv$ with probability at least
   $\frkProb_\bdv$. We show how $\bdv$ and its extractor can be used to extract
-  the witness from a proof provided by some USSE adversary $\adv$.
-
-  The adversary $\bdv$ proceeds as follows:
+  the witness from a proof provided by some USSE adversary $\adv$ which produces
+  an acceptable proof with probability $\accProb_\adv$.  The adversary $\bdv$
+  proceeds as follows:
   \begin{itemize}
   \item Run $(\setup, \bot, \bot, \bot)$ and obtain SRS $\srs_s$ and proof
     $\rho_s$.
@@ -1443,21 +1475,39 @@ update as well.
         i.e.~run $\algupdate(\REL, \srs_s, \rho_s; \prod_{k = 1}^n r_k)$ and
         get $(\srs_u, \rho_u)$. 
       \item Call the real oracle $\oraclesrs$ on $(\final, \srs_u, \smallset{\rho_s,
-        \rho_u})$. By the construction $\srs_u = \srs_n$. 
+        \rho_u})$. By the construction $\srs_u = \srs_n$. That is, the SRS finalized
+      by the adversary $\adv$ is the same as the SRS finalized by $\bdv$.
       \end{itemize}
     \end{description}
   \item On $\adv$'s queries to the simulator,
     \begin{itemize}
-    \item if the SRS has been set, pass the queries to the simulator $\simulator_\fs$;
-    \item if the SRS has not been set yet. \michals{11.05}{Problem, since $\bdv$
-      run $\setup$, he may not know the whole trapdoor at this point.}
+    \item if the SRS has been set (i.e.~$\adv$ called $\final$), pass the queries to the simulator $\simulator_\fs$;
+    \item if the SRS has not been set yet: Denote by $\srs_k$ the current SRS,
+      since all SRS updates were performed internally by $\bdv$, it knows
+      trapdoor $\td_k$ corresponding to $\srs_k$ and thus is able to provide
+      $\adv$ with the simulated proofs for the instances it requests.   
+      % \michals{11.05}{Problem, since $\bdv$
+      % run $\setup$, he may not know the whole trapdoor at this point.}
     \end{itemize}
   \end{itemize}
+
+  Eventually, the SRS is set and $\adv$ returns an instance $\inp$ and its proof
+  $\zkproof$. The same instance and proof are returned by $\bdv$. Note,
+  probability that $\bdv$ outputs an acceptable proof equals probability that
+  $\adv$ does, i.e.~$\accProb_\bdv = \accProb_\adv$. Furthermore, from the lemma's
+  assumptions there exists and extractor $\ext_\bdv$ which given oracle access
+  to $\bdv$ reveals the corresponding witness with probability $\frkProb_\bdv
+  \geq \infrac{(\accProb_\bdv - \nu)^d}{\poly} - \eps(\secpar)$, hence
+  \[
+    \frkProb_\adv \geq \infrac{(\accProb_\adv - \nu)^d}{\poly} - \eps(\secpar)\,.
+  \]
+  \qed
 \end{proof}
+
 \color{black}
 %}
 
-\section{Towards simulation extractability of multi-message protocols,
+\section{Towards special simulation extractability of multi-message protocols,
   definitions and lemmas}
 \label{sec:se_definitions}
 Unfortunately, Faust et al.'s result cannot be directly applied in our case
@@ -1639,7 +1689,7 @@ it in our simulation-extractability proof.  Let $\proofsystem$ be a
 computationally special sound proof system where for an instance $\inp$ the
 corresponding witness can be extracted from an
 $(1, \ldots, 1, n_k, 1, \ldots, 1)$-tree of accepting transcripts.  Let $\advse$
-be the simulation-extractability adversary that outputs an acceptable proof with
+be the special simulation-extractability adversary that outputs an acceptable proof with
 probability at least $\accProb$. (Although we use the same $\accProb$ to denote
 probability of $\zdv$ outputing a non-zero $i$ and probability of $\advse$
 outputing an acceptable proof we claim that these probabilities are exactly the
@@ -1774,12 +1824,12 @@ Since we do not utilise the classical special soundness (that holds for all,
 even unbounded, adversaries) all references to that property should be
 understood as references to its computational version.
 
-\section{Simulation-extractability---the general result}
+\section{Special simulation-extractability---the general result}
 Equipped with definitional framework of \cref{sec:se_definitions} we are ready
-to present the main result of this paper---simulation extractability of
+to present the main result of this paper---special simulation extractability of
 multi-round protocols.
 
-\begin{theorem}[Simulation-extractable multi-message protocols]
+\begin{theorem}[Special simulation-extractable multi-message protocols]
 \label{thm:se}
 Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be an interactive
 $(2 \mu + 1)$-message proof system for $\RELGEN(\secparam)$ that is honest
@@ -1790,7 +1840,7 @@ property with security $\epsur$, is $(n_1, \ldots, n_\mu)$-special
 sound for $n_i = 1, i \in \range{1}{\mu} \setminus \smallset{k}$ and $n_k = n$.
 
 Let $\ro\colon \bin^{*} \to \bin^{\secpar}$ be a random oracle. 
-Then $\psfs$ is simulation-extractable with extraction error $\epsur$
+Then $\psfs$ is special simulation-extractable with extraction error $\epsur$
 against $\ppt$ algebraic adversaries that makes up to $q$ random oracle queries and
 returns an acceptable proof with probability at least $\accProb$. 
 The extraction probability $\extProb$ is at least
@@ -1868,7 +1918,7 @@ for some negligible $\eps$.
 		\zkproof_{\simulator}[k].\ch, \zkproof_{\advse}[k + 1..\mu + 1])
 	\end{align*}
 	\end{itemize}  
-	If $\zkproof_1 = \zkproof_2$, then $\advse$ fails to break simulation
+	If $\zkproof_1 = \zkproof_2$, then $\advse$ fails to break special simulation
   extractability, as $\zkproof_2 \in Q$. On the other hand, if the proofs are
   not equal, then $\rdvur$ breaks $\ur{k}$-ness of $\ps$, what may happen with
   some negligible probability $\epsur$ only, hence \( \prob{\event{\errur}} \leq
@@ -2001,11 +2051,11 @@ Thus,
 	\extProb \geq \frac{1}{q^{n - 1}} (\accProb - \epsur)^{n} -\eps\,.
 \] 
 thus
-$\psfs$ is simulation extractable with extraction error $\epsur$.
+$\psfs$ is special simulation extractable with extraction error $\epsur$.
 \qed
 \end{proof}
 
-\section{Simulation extractability of $\plonkprotfs$} 
+\section{Special simulation extractability of $\plonkprotfs$} 
 In this section we show that $\plonkprotfs$ is simulation-extractable. To that
 end, we proceed as follows. First we show that the version of the KZG polynomial
 commitment scheme that is proposed in the \plonk{} paper has the unique opening
@@ -2864,15 +2914,15 @@ $\vec{w} = \pF(b_1, \ldots, b_9)$ and $\vec{w}$ being random, thus
 % \abs{\prob{\game{0}} - \prob{\game{2}}} \leq \epszk + \epsuber.  \) \qed
 \end{proof}
 
-\subsection{From special-soundness and unique response property to simulation
+\subsection{From special-soundness and unique response property to special simulation
   extractability of $\plonkprotfs$}
 
 Since \cref{lem:plonkprot_ur,lem:plonkprot_ss} hold, $\plonkprot$ is $\ur{3}$
 and computationally special sound. We now 
 make use of \cref{thm:se} and show that
-$\plonkprot_\fs$ is simulation-extractable as defined in \cref{def:simext}.
+$\plonkprot_\fs$ is special simulation-extractable as defined in \cref{def:simext}.
 
-\begin{corollary}[Simulation extractability of $\plonkprot_\fs$]
+\begin{corollary}[Special simulation extractability of $\plonkprot_\fs$]
 \label{thm:plonkprotfs_se}
 Assume that $\plonkprot$ is $\ur{3}$ with security $\epsur(\secpar)$, and
 computational special-sound with security $\epsss(\secpar)$. Let $\ro\colon
@@ -2888,7 +2938,7 @@ for some negligible $\eps$ and $\noofc$ being the number of
 constrains in the proven circuit.
 \end{corollary}
 
-\section{Simulation extractability of $\sonicprotfs$}
+\section{Special simulation extractability of $\sonicprotfs$}
 \label{sec:sonic}
 \subsection{\sonic{} protocol rolled out}
 In this section we present $\sonic$'s constraint system and algorithms. Reader
@@ -3228,19 +3278,19 @@ prover and verifier. \qed
   challenges that fits it.
 \end{remark}
 
-\subsection{From special-soundness and unique response property to simulation extractability of $\sonicprotfs$}
+\subsection{From special-soundness and unique response property to special simulation extractability of $\sonicprotfs$}
 Since \cref{lem:sonicprot_ur,lem:sonicprot_ss} hold, $\sonicprot$ is $\ur{2}$
 and computationally special sound. We now make use
-of \cref{thm:se} and show that $\sonicprotfs$ is simulation-extractable as defined in \cref{def:simext}.
+of \cref{thm:se} and show that $\sonicprotfs$ is special simulation-extractable as defined in \cref{def:simext}.
 
-\begin{corollary}[Simulation extractability of $\sonicprotfs$]
+\begin{corollary}[Special simulation extractability of $\sonicprotfs$]
   \label{thm:sonicprotfs_se}
   Assume that $\sonicprot$ is $\ur{2}$ with security $\epsur(\secpar)$, and
   computational special-sound with security $\epsss(\secpar)$. Let $\ro\colon
   \bin^* \to \bin^\secpar$ be a random oracle. Let $\advse$ be a $\ppt$
   adversary that can make up to $q$ random oracle queries and outputs an
   acceptable proof for $\sonicprotfs$ with probability at least $\accProb$. Then
-  $\sonicprotfs$ is simulation-extractable with extraction error $\eta =
+  $\sonicprotfs$ is special simulation-extractable with extraction error $\eta =
   \epsur$. The extraction probability $\extProb$ is at least
 \[
 		\extProb  \geq \frac{1}{q^{\multconstr + \linconstr}} (\accProb - \epsur)^{\multconstr +
