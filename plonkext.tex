@@ -517,9 +517,9 @@ necessary information like public parameters $\pp$ containing description of a
 group $\GRP$, if the relation is a relation of group elements (as it usually is
 in case of zkSNARKs).
 
-Let $\pcalgostyle{Algorithm}$ be an algorithm that (on some input $input$)
-returns a $k$-piece output $(out_0, \ldots, out_{k - 1})$. We write
-$\pcalgostyle{Algorithm}(input)[i]$ to denote $out_i$.
+% Let $\pcalgostyle{Algorithm}$ be an algorithm that (on some input $input$)
+% returns a $k$-piece output $(out_0, \ldots, out_{k - 1})$. We write
+% $\pcalgostyle{Algorithm}(input)[i]$ to denote $out_i$.
 
 \paragraph{Bilinear groups.}
 A bilinear group generator $\pgen (\secparam)$ returns public parameters $ \pp =
@@ -1048,20 +1048,46 @@ outputs as challenges its random coins) can be made non-interactive and
 zero-knowledge in the random oracle model by using the Fiat--Shamir
 transformation.
 
-\paragraph{Idealised verifier and verification equations}
-Usually the verifier $\verifier$ verifies messages sent by the prover by
-checking a number of equations that depend on the instance, SRS and the proof. We
-call these equations \emph{verification equations} and denote by $\vereq_i$, for
-$i$ being an index of the equation. We require that an acceptable
-proof yields $\vereq_i = 0$.
+\subsubsection{Idealised verifier and verification equations}
+Let $(\kgen, \prover, \verifier)$ be a protocol -- in this paper, either a proof
+systems or a polynomial commitment scheme. Observe that the $\kgen$ algorithm
+provides an SRS which can be interpreted as a set of group representation of
+polynomials evaluated at trapdoor elements. E.g.~for a trapdoor $\chi$ the SRS
+contains $\gone{\p{p_1}(\chi), \ldots, \p{p_k}(\chi)}$, for some polynomials
+$\p{p_1}(X), \ldots, \p{p_k}(X) \in \FF_p[X]$. On the other hand, the verifier
+$\verifier$ accepts if a verification equation $\vereq$ (or a set of them),
+which can also be interpreted as a polynomial in $\FF_p[X]$ and which
+coefficients depend on messages sent by the prover, zeroes at $\chi$. Following
+\cite{EPRINT:GabWilCio19} We call verifiers who checks that $\vereq(\chi) = 0$
+\emph{real verifiers} as opposed to \emph{ideal verifiers} who accepts only when
+$\vereq(X) = 0$. That is, while a real verifier accepts when a polynomial
+\emph{evaluates} to zero, an ideal verifier accepts only when the polynomial
+\emph{is} zero.
 
-In the proof systems we consider---$\plonk$ and $\sonic$---verification
-equations can be interpreted as group representations of polynomial evaluations
-at the trapdoor $\chi$. In other words, the verifier checks that
-$\vereq_i(\chi) = 0$. Gabizon et al.~\cite{EPRINT:GabWilCio19} formalized a
-notion of an \emph{idealised verifier} who, instead of checking that polynomial
-$\vereq_i(X)$ evaluates to $0$ at $\chi$, just checks that $\vereq_i(X)$ is a
-zero polynomial.
+Although ideal verifiers are impractical, the are very useful in our
+proofs. More precisely, we show that
+\begin{enumerate}[(1)]
+\item the idealised verifier accepts an incorrect proof (what ``incorrect''
+  means depends on the situation) with at most negligible probability (and many
+  cases---never);
+\item when the real verifier accepts, but not the idealised one, then we show
+  how to use a malicious $\provre$ to break the underlying security assumption
+  (in our case---a variant of $\dlog$.)
+\end{enumerate}
+
+% Usually the verifier $\verifier$ verifies messages sent by the prover by
+% checking a number of equations that depend on the instance, SRS and the
+% proof. We call these equations \emph{verification equations} and denote by
+% $\vereq_i$, for $i$ being an index of the equation. We require that an
+% acceptable proof yields $\vereq_i = 0$.
+
+% In the proof systems we consider---$\plonk$ and $\sonic$---verification
+% equations can be interpreted as group representations of polynomial evaluations
+% at the trapdoor $\chi$. In other words, the verifier checks that
+% $\vereq_i(\chi) = 0$. Gabizon et al.~\cite{EPRINT:GabWilCio19} formalized a
+% notion of an \emph{idealised verifier} who, instead of checking that polynomial
+% $\vereq_i(X)$ evaluates to $0$ at $\chi$, just checks that $\vereq_i(X)$ is a
+% zero polynomial.
 
 \subsubsection{Sigma protocols}
 A sigma protocol $\sigmaprot = (\prover, \verifier, \simulator)$ for a relation
@@ -1506,6 +1532,41 @@ that are the same on  first $i$ messages.
 We note that the definition above is independent on whether the proof
 system $\proofsystem$ utilises SRS (and compounds of the SRS-generating $\kgen$
 algorithm) or not.
+
+\color{blueish}
+\begin{definition}[SRS-updatable $\ur{i}$-protocol]
+\label{def:wiur}
+Let $\proofsystem$ be a $(2\mu + 1)$-message proof system $\ps = (\kgen,
+\prover, \verifier, \simulator)$. Let $\proofsystem_\fs$ be $\proofsystem$ after the
+Fiat--Shamir transform, Denote by $a_1, \ldots, a_{\mu}, a_{\mu + 1}$ protocol messages
+output by the prover, We say that $\proofsystem$ has \emph{unique responses
+  from $i$ on} if for any $\ppt$ adversary $\adv$:
+\[
+	\prob{
+		\begin{aligned}
+		&	\inp, \vec{a} = (a_1, \ldots, a_{\mu + 1}), \vec{a'} = (a'_1, \ldots,
+    a'_{\mu + 1})
+		\gets \adv^{\ro, \oraclesrs}(\REL), \\
+    & \vec{a} \neq \vec{a'}, a_1, \ldots, a_{i} = a'_1,
+    \ldots, a'_{i}, \\
+		& \verifier^\ro_\fs (\REL, \srs, \inp, \vec{a}) =
+		\verifier^\ro_\fs(\REL, \srs, \inp, \vec{a'}) = 1
+		\end{aligned}
+	% 	\ \left|\  
+% 	\vphantom{\begin{aligned}
+% 	&	\vec{a} = (a_0, b_0, \ldots, a_j, b_j, a_\mu), \vec{a'} = (a'_0, b'_0, \ldots, a'_j,
+% 	b'_j a'_\mu) \gets \adv^{\ro, \oraclesrs}(\REL), \vec{a} \neq \vec{a'}, \\
+% 	& b_k = b'_k, k \in \range{1, \mu - 1},\\ a_l = a'_l, l \in
+% \range{1}{j}, j > i 
+% 	\end{aligned}}
+% \srs \gets \kgen_\fs(\REL) \right.
+} \leq \negl.
+\]
+\end{definition}
+Intuitively, a protocol is $\ur{i}$ if it is infeasible for a $\ppt$ adversary
+to produce a pair of acceptable and different proofs $\zkproof$, $\zkproof'$
+that are the same on first $i$ messages.
+\color{black}
 
 \subsection{Computational special soundness}
 Note that the special soundness property (as usually defined) holds for
@@ -2433,9 +2494,8 @@ The \plonk{} verifier works as follows
 \subsection{Unique opening property of $\PCOMp$}
 \begin{lemma}
 \label{lem:pcomp_unique_op}
-Let $\PCOMp$ be a batched version of a KZG polynomial commitment
-\cite{AC:KatZavGol10} as described in \cite{EPRINT:GabWilCio19} then $\PCOMp$
-has the unique opening property in the AGM. 
+Let $\PCOMp$ be a batched version of a batched KZG polynomial
+commitment. $\PCOMp$ has the unique opening property in the AGM.
 \end{lemma}
 \begin{proof}
   Let $\vec{z} = (z, z') \in \FF_p^2$ be the two points the polynomials are
@@ -2576,53 +2636,7 @@ Step 1 above. \qed
 	\epsk + 2 \cdot \epsbind + \epsop\,.
 \]
 \qed
-
-
 \end{proof}
-\COMMENT{
-\begin{lemma}
-\label{lem:plonkprot_ur}
-If a polynomial commitment scheme $\PCOM$ is evaluation binding with parameter
-$\epsbind$ and has unique openings property with parameter $\epsop$, then
-$\plonkprot$ is $\ur{2}$. However, in the case presented here, less is required.
-with parameter $\epsur \leq \epsbind + \epsop$.
-\end{lemma}
-\begin{proof}
-  Let $\adv$ be an adversary that breaks $\ur{2}$-ness of $\plonkprot$.  We
-  consider two cases, depending on which round $\adv$ is able to provide at
-  least two different outputs such that the resulting transcripts are
-  acceptable.  For the first case we show that $\adv$ breaks the evaluation
-  binding property of $\PCOM$, while for the second case we show that it breaks
-  the unique opening property of $\PCOM$.
-
-\case{1} In Round 4 the prover is asked to give evaluations of predefined
-polynomials at some point $\chz$. Naturally, for the given polynomials only one
-value at $\chz$ is correct. Assume $\adv$ is able to produce two different
-outputs in that round: $\vec{r_4} = (\ev{\p{a}}, \ev{\p{b}}, \ev{\p{c}},
-\ev{\p{S_{\sigma 1}}}, \ev{\p{S_{\sigma 2}}}, \ev{\p{r}}, \ev{\p{z}})$ and
-$\vec{r_4} = (\ev{\p{a}}', \ev{\p{b}}', \ev{\p{c}}', \ev{\p{S_{\sigma 1}}}',
-\ev{\p{S_{\sigma 2}}}', \ev{\p{r}}', \ev{\p{z}}')$ which suppose to be
-evaluations at $\chz$ of polynomials $\p{a}, \p{b}, \p{c}, \p{S_{\sigma 1}},
-\p{S_{\sigma 2}}, \p{r}$ and an evaluation at $\chz \omega$ of $\p{z}$. Clearly,
-at least one of $\vec{r_4}$, $\vec{r'_4}$ has to be incorrect, thus if both
-evaluations are acceptable by the $\PCOM.\verify$ then the evaluation binding
-property of $\PCOM$ is broken. This happens with probability upper-bounded by
-$\epsbind$.
-
-\case{2} In the last round of the protocol the prover provides openings for the
-polynomial commitment evaluations done before. Assume $\adv$ is able to produce
-two different polynomial commitment openings pairs: $\vec{r_5} =
-(\ev{\p{W_\chz}}, \ev{\p{W_{\chz \omega}}})$ and $\vec{r'_5} =
-(\ev{\p{W_\chz}}', \ev{\p{W_{\chz \omega}}}')$.
-% Since \cref{lem:pcomp_unique_op},
-Since $\PCOM$ has unique opening property, one of the openings has to be
-incorrect and should be rejected by the polynomial commitment verifier. This
-happens except with probability $\epsop$
-
-\conclude Hence the probability that $\adv$ breaks $\ur{2}$-property of
-$\plonkprot$ is upper-bounded by $\epsbind + \epsop$. \qed
-\end{proof}
-}
 
 \subsection{Computational special soundness}
 \begin{lemma}
