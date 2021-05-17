@@ -1969,6 +1969,54 @@ define updatable special simulation extractability
   \qed
 \end{proof}
 
+\paragraph{On the security reductions.}
+Some of the proofs presented in \cite{EPRINT:GabWilCio19,CCS:MBKM19} utilizes
+the following blueprint for showing security of a proof system or commitment
+scheme. Let $(\kgen, \prover, \verifier)$ be a protocol such that for a trapdoor
+trapdoor element $\chi$, the SRS is provided by $\kgen$ can be expressed as a
+sequence of polynomials in $\chi$. Let the proof provided by $\prover$ consists
+of field elements and a number of polynomials $f_i$ evaluated at $\chi$. Let the
+verifier accept the proof from the prover if a verification equation built from
+the SRS elements, proven instance, and proof's elements $\vereq_{\inp, \zkproof}$ zeroes at
+$\chi$. Then the security proof states that if there is an algebraic adversary
+$\adv$ that can make the verifier accept, i.e.~$\vereq_{\inp, \zkproof}(\chi) = 0$, yet
+$\vereq_{\inp, \zkproof}(X) \not\equiv 0$, (i.e.~the verification equation is not a zero
+polynomial), then there is a reduction that utilizes $\adv$ to break an
+assumption from a dlog-family. We show that protocols which security relies on
+such a proof are secure even against adversaries which can update the given SRS.
+
+\begin{lemma}
+  Let $\ps = (\kgen, \prover, \verifier)$ be an interactive protocol with a
+  verification equation $\vereq$. Let $\ps'$ be a variant of $\ps$ such that
+  $\ps'$'s $\kgen$ algorithm allows one-time SRS update. Let $\rdv$ be a
+  reduction that given a $q$-$\dlog$ instance $\gone{1, \chi, \ldots, \chi^q}$
+  and algebraic adversary $\adv$ for $\ps$, which on input $\srs(\chi)$ prepared
+  by $\rdv$ outputs with non-negligible probability $(\inp, \zkproof)$ such that
+  $\vereq_{\srs, \inp, \zkproof}(\chi) = $ but
+  $\vereq_{\srs, inp, \zkproof} \not\equiv 0$, outputs $\chi$ with
+  non-negligible probability as well. Then there exists a reduction $\rdv'$ that
+  breaks $q$-$\dlog$ given $\ps'$ adversary $\adv'$.
+\end{lemma}
+\begin{proof}[draft]
+  Reduction $\rdv'$ given instance $\gone{1, \chi, \ldots, \chi^q}$ proceeds as
+  follows. First, it prepares an SRS $\srs(\chi)$ from the given instance and
+  presents it to the adversary $\adv'$. The adversary makes its update which
+  results in an $\srs'$ and an update proof $\rho$ which certifies $\adv'$'s
+  knowledge of $\chi'$ such that $\srs' = \srs(\chi \cdot \chi')$. This allows
+  $\rdv'$ to reveal $\chi'$ from $\rho$. Eventually, $\adv'$ outputs
+  $\inp, \zkproof$ such that $\vereq_{\srs', \inp, \zkproof}(\chi \chi') = 0$
+  but the verification equation is not a zero polynomial. Denote by
+  $a_0, \ldots, a_k$ coefficients of
+  $\vereq_{\srs', \inp, \zkproof}(\chi \chi')$
+  i.e.~$\sum_{i = 0}^k a_i (\chi^i \chi'^i) = 0$. Since $\adv$ is algebraic, it
+  outputs coefficients of the output elements as represented in the basis
+  $\srs(\chi)$.  Let $f_{\chi'}$ be a function that given a linear combination
+  of vectors' representations in $\srs(\chi)$ produces their representations in
+  $\srs(\chi \chi')$.
+\end{proof}
+
+
+
 \color{black}
 %}
 
