@@ -2010,9 +2010,9 @@ such a proof are secure even against adversaries which can update the given SRS.
   $\vereq_{\srs', \inp, \zkproof}(\chi \chi')$
   i.e.~$\sum_{i = 0}^k a_i (\chi^i \chi'^i) = 0$. Since $\adv$ is algebraic, it
   outputs coefficients of the output elements as represented in the basis
-  $\srs(\chi)$.  Let $f_{\chi'}$ be a function that given a linear combination
-  of vectors' representations in $\srs(\chi)$ produces their representations in
-  $\srs(\chi \chi')$.
+  $S = \srs(\chi) \otimes \srs(\chi)$.  Let $f_{\chi'}$ be a function that given a
+  linear combination of vectors' representations in $S$ produces their
+  representations in $S' = \srs(\chi \chi') \otimes \srs(\chi \chi')$. Then 
 \end{proof}
 
 
