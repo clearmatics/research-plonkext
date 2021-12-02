@@ -1,0 +1,11 @@
+We thank the reviewers for their comments, unfortunately, due to space limit we
+are able to answer only to some of them. 
+Regarding required number of rewinding for Plonk (3n + 1) we note that although
+this number is linear it does not contradict succinctness as extractor may work
+in time greater than sublinear w.r.t the circuit size. The only reason why the
+extractor is inefficient comes from the bounds introduced by our generalized
+forking lemma, however, a recent paper by Attmea, Fehr and Klooß "Fiat-Shamir
+Transformation of Multi-Round Interactive Proofs" shows that these bounds can be
+make much tighter, namely, the extractor succeeds with an overwhelming
+probability working in expected time roughly Q^r where Q is the number of random
+oracle calls the adversary makes and r is the number of rounds in the protocol.  
