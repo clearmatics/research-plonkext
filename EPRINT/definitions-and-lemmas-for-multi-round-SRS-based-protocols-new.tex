@@ -130,7 +130,7 @@ response property. More precisely, we say that a $(2\mu + 1)$-message protocol
 has \emph{unique responses from $i$}, and call it a $\ur{i}$-protocol, if it
 follows the definition below:
 
-
+\iffalse
 \begin{definition}[Updatable $\ur{i}$-protocol]
 	\label{def:wiuru}
 	Let $\proofsystem$ be a $(2\mu + 1)$-message public coin proof system
@@ -154,6 +154,33 @@ follows the definition below:
 	\right] \leq \epsur(\secpar) 
 	\]
 	Here $\zkproof$ and $\zkproof'$ are two proofs prepared by the adversary which contain both the prover's messages, and, picked by the adversary, verifier's challenges. If $\epsur(\secpar)$ is negligible, we simply say $\proofsystem$ is $\ur{i}$.
+\end{definition}
+%
+\fi
+
+\begin{definition}[Updatable $\ur{(k, \vec{a})}$-protocol]
+	\label{def:iuru}
+	Let $\proofsystem$ be a $(2\mu + 1)$-message public coin proof system
+  $\ps = (\kgen, \prover, \verifier, \simulator)$ and $\psfs$ its variant after the Fiat--Shamir transformation application. Denote
+  by $\zkproof_1, \ldots, \zkproof_{\mu}, \zkproof_{\mu + 1}$ protocol messages
+  output by the prover. We write $\zkproof_i.\ch$ to denote a challenge that the prover gets after sending $\zkproof_{i}$. We say that $\proofsystem$ has \emph{unique responses from $i$} with security $\epsur(\secpar)$ if for any $\ppt$ adversary $\advur$:
+  \[
+	\Pr\left[
+		\left.
+	\begin{aligned}
+	& \zkproof \neq \zkproof', (\zkproof_1, \ldots, \zkproof_{i}) = (\zkproof'_1,
+	\ldots, \zkproof'_{i}), \\
+	%& (\zkproof_{1}, \ldots, \zkproof_{j}) = (\zkproof'_{1}, \ldots, \zkproof'_{j}) \implies \zkproof_{j}.\ch = \zkproof'_{j}.\ch),\\
+	& \tilde{\verifier}^{\ro}_{\fs} (\srs, \inp, \zkproof, \vec{z}) =
+	\tilde{\verifier}_{\fs} (\srs, \inp, \zkproof', \vec{z'}) = 1  \\
+	\end{aligned}
+	\,\right|\,
+	\begin{aligned}
+		& (\srs, \inp, \zkproof, \zkproof', \vec{z}, \vec{z'}) \gets \adv^{\ro, \initU}(1^\secpar) 
+	\end{aligned}
+	\right] \leq \epsur(\secpar) 
+	\]
+	Here $\zkproof$ and $\zkproof'$ are two proofs prepared by the adversary which contain the prover's messages.The adversary picks the challenges in $\vec{a}$ on its own. We denote that challenges by $\vec{z}$ (for the proof $\zkproof$), and $\vec{z'}$ (for $\zkproof'$). Verifier $\tilde{\verifier}_{\fs}$ behaves as $\verifier^{\ro}_{\fs}$ except it does not compute the vectors in $\vec{a}$, but takes them from the adversary. If $\epsur(\secpar)$ is negligible, we simply say $\proofsystem$ is $\ur{(k, \vec{a})}$.
 \end{definition}
 %
 Note that in the above definition, $\srs$ is the SRS that $\advse$ finalised using

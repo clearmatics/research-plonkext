@@ -5,8 +5,8 @@
 	Let $\ps = (\kgen, \prover, \verifier, \simulator)$ be an interactive
 	$(2 \mu + 1)$-message HVZK proof system for $\RELGEN(\secparam)$. Let
 	$\ro \colon \bin^{*} \to \bin^{\secpar}$ be a random oracle. If $\psfs$ has the
-	$k$-\emph{updatable unique response property} with security loss $\epsur(\secpar)$, 
-	\emph{updatable $k'$-programmable trapdoor-less zero knowledge}, and $(1, \ldots, 1, n_{k''}, \ldots, n_\mu)$-\emph{updatable computational special soundness} with security loss $\epscss(\secpar)$, where $k \leq k' \leq k''$. Then $\psfs$ is \emph{updatable simulation-extractable} against any $\ppt$ adversary $\advse$ who return an acceptable proof with probability at least $\accProb$ with 	extraction probability $\extProb$ is at least
+	$(k, (a_1, \ldots, a_l))$-\emph{updatable unique response property}, for some $l$, with security loss $\epsur(\secpar)$, 
+	\emph{updatable $k'$-programmable trapdoor-less zero knowledge}, and $(1, \ldots, 1, n_{k''}, \ldots, n_\mu)$-\emph{updatable computational special soundness} with security loss $\epscss(\secpar)$, where $k \leq k' \leq k''$ and $k' \leq a_1$. Then $\psfs$ is \emph{updatable simulation-extractable} against any $\ppt$ adversary $\advse$ who return an acceptable proof with probability at least $\accProb$ with 	extraction probability $\extProb$ is at least
 	$\extProb \geq 1 - \epscss(\secpar, \accProb)\,$.
 \end{theorem}
 
@@ -51,7 +51,7 @@
 		Probability that $\event{E}$ happens is upper-bounded by $\epsur(\secpar)$. 
 	\end{lemma}
 	\begin{proof}
-	We build an adversary $\advur^{\ro, \initU} (\secpar; r)$ that has access to the random oracle $\ro$ and update oracle $\initU$. $\advur$ uses $\advse$ to break the $\ur{k}$ property of $\ps$. Namely, for randomness $r = (r_{\advse}, \rsim)$, $\advur^{\ro, \initU} (\secpar; r)$ runs $\advse^{\initU, \simulator_1, \simulator_2'}(\secparam; r_{\advse})$ internally and answers its oracle queries as $\advcss$ did.
+	We build an adversary $\advur^{\ro, \initU} (\secpar; r)$ that has access to the random oracle $\ro$ and update oracle $\initU$. $\advur$ uses $\advse$ to break the $\ur{(k, \changedm{\vec{a}})}$ property of $\ps$. Namely, for randomness $r = (r_{\advse}, \rsim)$, $\advur^{\ro, \initU} (\secpar; r)$ runs $\advse^{\initU, \simulator_1, \simulator_2'}(\secparam; r_{\advse})$ internally and answers its oracle queries as $\advcss$ did.
 
 	When $\advse$ makes a proof $\zkproof$ for $\inp_{\advse}$ such that $\event{E}$ holds, $\advur$ looks through lists $Q$ and $Q_\ro$ until it finds $\zkproofs[0..k]$ such that $\zkproof_{\advse}[0..k] = \zkproofs[0..k]$ and a random oracle query $\zkproofs[k].\ch$ on $\zkproofs[0..k]$.	$\advur$ returns two proofs for $\inp_{\advse}$:
 		\begin{align*}
