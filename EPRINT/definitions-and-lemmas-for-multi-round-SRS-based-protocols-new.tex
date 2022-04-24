@@ -158,7 +158,7 @@ follows the definition below:
 %
 \fi
 
-\begin{definition}[Updatable $\ur{(k, \vec{a})}$-protocol]
+\begin{definition}[Updatable $\ur{k}$-protocol]
 	\label{def:iuru}
 	Let $\proofsystem$ be a $(2\mu + 1)$-message public coin proof system
   $\ps = (\kgen, \prover, \verifier, \simulator)$ and $\psfs$ its variant after the Fiat--Shamir transformation application. Denote
@@ -171,16 +171,17 @@ follows the definition below:
 	& \zkproof \neq \zkproof', (\zkproof_1, \ldots, \zkproof_{i}) = (\zkproof'_1,
 	\ldots, \zkproof'_{i}), \\
 	%& (\zkproof_{1}, \ldots, \zkproof_{j}) = (\zkproof'_{1}, \ldots, \zkproof'_{j}) \implies \zkproof_{j}.\ch = \zkproof'_{j}.\ch),\\
-	& \tilde{\verifier}^{\ro}_{\fs} (\srs, \inp, \zkproof, \vec{z}) =
-	\tilde{\verifier}_{\fs} (\srs, \inp, \zkproof', \vec{z'}) = 1  \\
+	& \tilde{\verifier}^{\ro}_{\fs} (\srs, \inp, \zkproof\changedm{, z}) =
+	\tilde{\verifier}_{\fs} (\srs, \inp, \zkproof'\changedm{, z'}) = 1  \\
 	\end{aligned}
 	\,\right|\,
 	\begin{aligned}
-		& (\srs, \inp, \zkproof, \zkproof', \vec{z}, \vec{z'}) \gets \adv^{\ro, \initU}(1^\secpar) 
+		& (\srs, \inp, \zkproof, \zkproof'\changedm{, z, z'}) \gets \adv^{\ro, \initU}(1^\secpar) 
 	\end{aligned}
 	\right] \leq \epsur(\secpar) 
 	\]
-	Here $\zkproof$ and $\zkproof'$ are two proofs prepared by the adversary which contain the prover's messages.The adversary picks the challenges in $\vec{a}$ on its own. We denote that challenges by $\vec{z}$ (for the proof $\zkproof$), and $\vec{z'}$ (for $\zkproof'$). Verifier $\tilde{\verifier}_{\fs}$ behaves as $\verifier^{\ro}_{\fs}$ except it does not compute the vectors in $\vec{a}$, but takes them from the adversary. If $\epsur(\secpar)$ is negligible, we simply say $\proofsystem$ is $\ur{(k, \vec{a})}$.
+	\changedm{
+	Here $\zkproof$ and $\zkproof'$ are two proofs prepared by the adversary which contain the prover's messages.The adversary picks the $k$-th challenge on its own. We denote that challenge by $z$ (for the proof $\zkproof$), and $z'$ (for $\zkproof'$). Verifier $\tilde{\verifier}_{\fs}$ behaves as $\verifier^{\ro}_{\fs}$ except it does not compute the $k$-th challenge, but takes them from the adversary. If $\epsur(\secpar)$ is negligible, we simply say $\proofsystem$ is $\ur{k}$.}
 \end{definition}
 %
 Note that in the above definition, $\srs$ is the SRS that $\advse$ finalised using
@@ -212,7 +213,7 @@ string.
   If $\epszk(\secpar)$ is negligible, we say $\ps_{\fs}$ is trapdoor-less simulatable. Additionally, we say that $\ps_{\fs}$ is $k$-programmable, if 
 	\begin{inparaenum}[(a)]
 		\item $\simulator_{\fs}$ picks a random witness and computes the proof as an honest prover would, including computing challenges using random oracle, up to $k$-th prover's message;
-		\item $\simulator_{\fs}$  programs the random oracle \emph{only} after $k$-th prover's message;
+		\item $\simulator_{\fs}$  programs the random oracle \emph{only} \changedm{at} $k$-th prover's message;
 	\end{inparaenum}
   \end{definition}
 
